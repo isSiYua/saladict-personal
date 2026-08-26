@@ -9,11 +9,15 @@ export interface NaturalSpeechResult {
   remote: boolean
 }
 
+export type NaturalSpeechState = 'idle' | 'speaking' | 'paused'
+
 const naturalVoiceName = /natural|online|neural|enhanced|premium/i
 const lowQualityVoiceName = /compact|espeak|festival/i
 
 interface TTSApi {
   getVoices(callback: (voices: chrome.tts.TtsVoice[]) => void): void
+  pause(): void
+  resume(): void
   stop(): void
   speak(
     utterance: string,
@@ -25,6 +29,8 @@ interface TTSApi {
 interface WebSpeechApi {
   cancel(): void
   getVoices(): SpeechSynthesisVoice[]
+  pause(): void
+  resume(): void
   speak(utterance: SpeechSynthesisUtterance): void
   addEventListener?: (
     type: 'voiceschanged',
@@ -193,9 +199,34 @@ async function bestWebSpeechVoice(
 }
 
 class NaturalTTSManager {
+  private state: NaturalSpeechState = 'idle'
+  private activeEngine: 'chrome' | 'web' | null = null
+  private session = 0
+
+  getState(): NaturalSpeechState {
+    return this.state
+  }
+
   stop(): void {
+    this.session += 1
+    this.state = 'idle'
+    this.activeEngine = null
     ttsApi()?.stop()
     webSpeechApi()?.cancel()
+  }
+
+  togglePause(): NaturalSpeechState {
+    if (this.state === 'speaking') {
+      if (this.activeEngine === 'chrome') ttsApi()?.pause()
+      else if (this.activeEngine === 'web') webSpeechApi()?.pause()
+      this.state = 'paused'
+    } else if (this.state === 'paused') {
+      if (this.activeEngine === 'chrome') ttsApi()?.resume()
+      else if (this.activeEngine === 'web') webSpeechApi()?.resume()
+      this.state = 'speaking'
+    }
+
+    return this.state
   }
 
   async speak(request: NaturalSpeechRequest): Promise<NaturalSpeechResult> {
@@ -203,27 +234,29 @@ class NaturalTTSManager {
     if (!text) throw new Error('No speakable text')
     const lang = request.lang || detectSpeechLanguage(text)
     this.stop()
+    const session = this.session
 
     const tts = ttsApi()
     if (!tts?.speak) {
-      return this.speakWithWebSpeech(text, lang)
+      return this.speakWithWebSpeech(text, lang, session)
     }
 
     const voice = await bestVoice(lang)
 
     try {
-      return await this.speakOnce(text, lang, voice)
+      return await this.speakOnce(text, lang, voice, session)
     } catch (error) {
       // A cloud voice can temporarily disappear or reject a long utterance.
       // Retry once with Edge's default language voice instead of hanging.
-      if (voice) return this.speakOnce(text, lang, null)
+      if (voice) return this.speakOnce(text, lang, null, session)
       throw error
     }
   }
 
   private async speakWithWebSpeech(
     text: string,
-    lang: string
+    lang: string,
+    session: number
   ): Promise<NaturalSpeechResult> {
     const speech = webSpeechApi()
     const Utterance = utteranceConstructor()
@@ -253,10 +286,18 @@ class NaturalTTSManager {
       utterance.rate = 0.96
       utterance.pitch = 1
       if (voice) utterance.voice = voice
-      utterance.onstart = () => finish()
-      utterance.onend = () => finish()
-      utterance.onerror = event =>
+      utterance.onstart = () => {
+        this.setStateForSession(session, 'speaking', 'web')
+        finish()
+      }
+      utterance.onend = () => {
+        this.setStateForSession(session, 'idle', null)
+        finish()
+      }
+      utterance.onerror = event => {
+        this.setStateForSession(session, 'idle', null)
         finish(new Error(String((event as any).error || 'TTS failed')))
+      }
 
       const startTimer = setTimeout(
         () => finish(new Error('TTS did not start')),
@@ -275,7 +316,8 @@ class NaturalTTSManager {
   private speakOnce(
     text: string,
     lang: string,
-    voice: chrome.tts.TtsVoice | null
+    voice: chrome.tts.TtsVoice | null,
+    session: number
   ): Promise<NaturalSpeechResult> {
     const tts = ttsApi()!
     return new Promise((resolve, reject) => {
@@ -299,14 +341,28 @@ class NaturalTTSManager {
         enqueue: false,
         rate: 0.96,
         pitch: 1,
-        desiredEventTypes: ['start', 'error'],
+        desiredEventTypes: [
+          'start',
+          'end',
+          'error',
+          'cancelled',
+          'interrupted'
+        ],
         onEvent: event => {
           if (event.type === 'start') {
+            this.setStateForSession(session, 'speaking', 'chrome')
             clearTimeout(startTimer)
             finish()
           } else if (event.type === 'error') {
+            this.setStateForSession(session, 'idle', null)
             clearTimeout(startTimer)
             finish(new Error(event.errorMessage || 'TTS failed'))
+          } else if (
+            event.type === 'end' ||
+            event.type === 'cancelled' ||
+            event.type === 'interrupted'
+          ) {
+            this.setStateForSession(session, 'idle', null)
           }
         }
       }
@@ -320,6 +376,16 @@ class NaturalTTSManager {
         }
       })
     })
+  }
+
+  private setStateForSession(
+    session: number,
+    state: NaturalSpeechState,
+    engine: 'chrome' | 'web' | null
+  ): void {
+    if (session !== this.session) return
+    this.state = state
+    this.activeEngine = engine
   }
 }
 

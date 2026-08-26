@@ -176,6 +176,10 @@ export type MessageConfig = MessageConfigType<{
     }
   }
 
+  TOGGLE_SPEECH_PAUSE: {
+    response: 'idle' | 'speaking' | 'paused'
+  }
+
   STOP_AUDIO: {}
 
   LAST_PLAY_AUDIO: {

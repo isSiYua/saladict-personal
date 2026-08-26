@@ -14,6 +14,8 @@ export const locale: typeof _locale = {
     openOptions: 'विकल्प खोल्नुहोस्',
     addToNotebook: 'नोटबुकमा जोड्नुहोस्। नोटबुक खोल्न राइट क्लिक गर्नुहोस्',
     speakText: 'हालको शब्द वा वाक्य ठूलो स्वरमा पढ्नुहोस्',
+    pauseSpeech: 'पढाइ रोक्नुहोस्',
+    resumeSpeech: 'पढाइ जारी राख्नुहोस्',
     openNotebook: 'नोटबुक खोल्नुहोस्',
     openHistory: 'इतिहास खोल्नुहोस्',
     shareImg: 'तस्विर रूपमा साझा गर्नुहोस्',

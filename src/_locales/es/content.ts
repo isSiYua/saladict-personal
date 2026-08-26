@@ -15,6 +15,8 @@ export const locale: typeof _locale = {
     addToNotebook:
       'Agregar al cuaderno. Haga clic derecho para abrir el cuaderno',
     speakText: 'Leer en voz alta la palabra o frase actual',
+    pauseSpeech: 'Pausar lectura',
+    resumeSpeech: 'Reanudar lectura',
     openNotebook: 'Abrir cuaderno',
     openHistory: 'Abrir historial',
     shareImg: 'Compartir como imagen',

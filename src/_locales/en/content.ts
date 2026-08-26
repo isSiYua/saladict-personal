@@ -14,6 +14,8 @@ export const locale: typeof _locale = {
     openOptions: 'Open Options',
     addToNotebook: 'Add to Notebook. Right click to open Notebook',
     speakText: 'Read the current word or sentence aloud',
+    pauseSpeech: 'Pause reading',
+    resumeSpeech: 'Resume reading',
     openNotebook: 'Open Notebook',
     openHistory: 'Open History',
     shareImg: 'Share as image',

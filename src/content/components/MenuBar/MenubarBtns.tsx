@@ -142,6 +142,37 @@ export const SpeakTextBtn: FC<MenubarBtnProps> = props => {
   )
 }
 
+export interface SpeechPauseBtnProps extends MenubarBtnProps {
+  isPaused: boolean
+}
+
+/** Separate pause/resume control; the speaker button always starts from zero. */
+export const SpeechPauseBtn: FC<SpeechPauseBtnProps> = props => {
+  const { t, isPaused, ...restProps } = props
+  return (
+    <button
+      className="menuBar-Btn"
+      title={t(isPaused ? 'tip.resumeSpeech' : 'tip.pauseSpeech')}
+      aria-pressed={isPaused}
+      {...restProps}
+    >
+      <svg
+        className="menuBar-Btn_Icon"
+        width="30"
+        height="30"
+        viewBox="0 0 32 32"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {isPaused ? (
+          <path d="M9 5v22l18-11L9 5z" />
+        ) : (
+          <path d="M7 5h7v22H7V5zm11 0h7v22h-7V5z" />
+        )}
+      </svg>
+    </button>
+  )
+}
+
 /**
  * Open History page
  */

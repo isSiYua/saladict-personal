@@ -12,6 +12,8 @@ export const locale = {
     openOptions: '打开设置',
     addToNotebook: '保存单词到生词本，右键打开生词本',
     speakText: '朗读当前单词或句子',
+    pauseSpeech: '暂停朗读',
+    resumeSpeech: '继续朗读',
     openNotebook: '打开生词本',
     openHistory: '打开查词记录',
     shareImg: '以图片方式分享查词结果',

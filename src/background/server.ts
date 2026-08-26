@@ -122,6 +122,8 @@ export class BackgroundServer {
           return getDomTaskBridge()
             .stopAudio()
             .then(() => naturalTTSManager.speak(msg.payload))
+        case 'TOGGLE_SPEECH_PAUSE':
+          return Promise.resolve(naturalTTSManager.togglePause())
         case 'STOP_AUDIO':
           naturalTTSManager.stop()
           return getDomTaskBridge().stopAudio()

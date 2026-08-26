@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import {
   useObservableCallback,
   useObservable,
@@ -20,6 +20,7 @@ import {
   HistoryNextBtn,
   FavBtn,
   SpeakTextBtn,
+  SpeechPauseBtn,
   NotebookBtn,
   PinBtn,
   CloseBtn,
@@ -38,6 +39,7 @@ export interface MenuBarProps {
   isInNotebook: boolean
   addToNoteBook: () => any
   speakText?: () => any
+  toggleSpeechPause?: () => Promise<'idle' | 'speaking' | 'paused'>
 
   shouldFocus: boolean
   enableSuggest: boolean
@@ -70,6 +72,11 @@ export interface MenuBarProps {
 
 export const MenuBar: FC<MenuBarProps> = props => {
   const { t } = useTranslate(['content', 'common'])
+  const [speechState, setSpeechState] = useState<
+    'idle' | 'speaking' | 'paused'
+  >('idle')
+
+  useEffect(() => setSpeechState('idle'), [props.text])
 
   const [updateProfileHeight, profileHeight$] = useObservableCallback<number>(
     heightChangeTransform
@@ -149,7 +156,20 @@ export const MenuBar: FC<MenuBarProps> = props => {
           }
         }}
       />
-      <SpeakTextBtn t={t} onClick={props.speakText} disabled={!props.text} />
+      <SpeakTextBtn
+        t={t}
+        onClick={() => {
+          setSpeechState('speaking')
+          props.speakText?.()
+        }}
+        disabled={!props.text}
+      />
+      <SpeechPauseBtn
+        t={t}
+        isPaused={speechState === 'paused'}
+        onClick={() => props.toggleSpeechPause?.().then(setSpeechState)}
+        disabled={!props.text}
+      />
       <NotebookBtn
         t={t}
         onClick={() =>

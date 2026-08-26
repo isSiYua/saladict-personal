@@ -22,6 +22,7 @@ type Dispatchers = ExtractDispatchers<
   | 'updateText'
   | 'addToNoteBook'
   | 'speakText'
+  | 'toggleSpeechPause'
   | 'switchHistory'
   | 'togglePin'
   | 'toggleQSFocus'
@@ -83,6 +84,7 @@ const mapDispatchToProps: MapDispatchToPropsFunction<
       if (text) message.send({ type: 'SPEAK_TEXT', payload: { text } })
     })
   },
+  toggleSpeechPause: () => message.send({ type: 'TOGGLE_SPEECH_PAUSE' }),
   switchHistory: direction => {
     dispatch({ type: 'SWITCH_HISTORY', payload: direction })
   },
