@@ -1,17 +1,15 @@
 {
+  "version": "7.22.8.1",
   "manifest_version": 2,
   "options_ui": {
     "browser_style": false
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "saladict@crimx.com",
+      "id": "saladict-personal@issiyua.github.io",
       "strict_min_version": "142.0",
       "data_collection_permissions": {
-        "required": [
-          "searchTerms",
-          "websiteContent"
-        ],
+        "required": ["searchTerms", "websiteContent"],
         "optional": [
           "authenticationInfo",
           "browsingActivity",

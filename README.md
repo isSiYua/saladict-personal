@@ -1,6 +1,6 @@
 # 沙拉查词-个人自用版
 
-基于开源项目 Saladict v7.22.8 修改，保留原有“划词后直接弹出翻译面板”的使用方式，主要针对 Edge、PDF 阅读和技术资料翻译进行了个人化改进。
+基于开源项目 Saladict v7.22.8 修改，保留原有“划词后直接弹出翻译面板”的使用方式，主要针对 Edge、Chrome、Firefox、PDF 阅读和技术资料翻译进行了个人化改进。
 
 ## 个人版主要改进
 
@@ -10,8 +10,15 @@
 - 保留并修复谷歌、彩云、有道和百度等原有翻译器的兼容性。
 - 简化查词记录与生词本显示，提供朗读按钮；`Ctrl+D` 和顶部红心均可再次操作以取消收藏。
 - 有道词典默认显示基础释义，柯林斯与长例句通过卡片底部箭头展开。
+- 增加 Firefox 兼容构建与系统语音降级方案；Firefox 没有 `chrome.tts` 时仍可朗读单词和句子。
 
-Edge MV3 安装包见 [`saladict-v7.22.8-codex-edge-mv3.zip`](./saladict-v7.22.8-codex-edge-mv3.zip)。解压后在 Edge 扩展管理页开启开发人员模式，并选择“加载解压缩的扩展”。API 密钥仅保存在浏览器配置中，不包含在源码或安装包内。
+## 安装包
+
+- Edge：使用 Release 中的 Edge MV3 ZIP，解压后在 `edge://extensions` 开启开发人员模式并选择“加载解压缩的扩展”。
+- Chrome：可使用同一个 Edge MV3 ZIP，解压后在 `chrome://extensions` 开启开发者模式并选择“加载已解压的扩展程序”。
+- Firefox：使用 Release 中经 Mozilla 签名的 XPI，打开文件即可安装。名称带 `unsigned` 的 ZIP 只用于 `about:debugging#/runtime/this-firefox` 临时测试，Firefox 重启后会自动移除，不能作为日常安装包。
+
+浏览器配置和 API 密钥不会写入源码或安装包。换到另一台电脑或给其他人使用时，需要导入自己的 `.saladict` 配置；DeepL、Gemini 等服务应填写使用者自己的密钥。
 
 ---
 

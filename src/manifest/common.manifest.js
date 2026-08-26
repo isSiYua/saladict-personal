@@ -77,7 +77,6 @@ module.exports = {
     'notifications',
     'storage',
     'tabs',
-    'tts',
     'unlimitedStorage',
     'webRequest',
     'webRequestBlocking'

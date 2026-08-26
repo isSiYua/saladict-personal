@@ -4,6 +4,7 @@
     "chrome_style": false
   },
   "incognito": "split",
+  "permissions": ["tts"],
   "update_url": "https://edge.microsoft.com/extensionwebstorebase/v1/crx",
   "minimum_chrome_version": "128"
 }
