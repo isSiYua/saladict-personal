@@ -16,6 +16,8 @@ import {
 } from '../machine-custom'
 
 export const GOOGLE_MOBILE_TRANSLATE_ENDPOINT = 'https://translate.google.com/m'
+export const GOOGLE_CHROME_TRANSLATE_ENDPOINT =
+  'https://clients5.google.com/translate_a/t'
 
 export const getTranslator = memoizeOne(() => new Google({ env: 'ext' }))
 
@@ -30,6 +32,36 @@ export const getSrcPage: GetSrcPageFunction = (text, config, profile) => {
 }
 
 export type GoogleResult = MachineTranslateResult<'google'>
+
+const googleServiceErrorPatterns = [
+  /#af-error-page/i,
+  /document\.getElementById\(["']af-error-page/i,
+  /Error\s*500\s*\(Server Error\)/i,
+  /Additional content will be added prior to/i,
+  /your computer or network may be sending automated queries/i
+]
+
+/** Do not let Google service/error documents become visible translation text. */
+export function isGoogleServiceErrorText(text: string): boolean {
+  if (googleServiceErrorPatterns.some(pattern => pattern.test(text))) {
+    return true
+  }
+
+  const hasErrorLead = /(?:\b500\.|That.?s an error|出现错误|服务器错误)/i.test(
+    text
+  )
+  const hasErrorTail = /(?:That.?s all we know|这就是我们所知道的全部信息)/i.test(
+    text
+  )
+  return hasErrorLead && hasErrorTail
+}
+
+function getUsableGoogleTranslation(text: unknown): string {
+  if (typeof text !== 'string') return ''
+
+  const normalized = text.trim()
+  return normalized && !isGoogleServiceErrorText(normalized) ? normalized : ''
+}
 
 function decodeHtmlEntities(text: string): string {
   return text
@@ -48,12 +80,49 @@ function decodeHtmlEntities(text: string): string {
 }
 
 export function parseGoogleMobileTranslation(html: string): string {
+  if (isGoogleServiceErrorText(html)) return ''
+
   const match = /<div[^>]+class=["'][^"']*\bresult-container\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i.exec(
     html
   )
   if (!match) return ''
 
-  return decodeHtmlEntities(match[1].replace(/<[^>]+>/g, '')).trim()
+  return getUsableGoogleTranslation(
+    decodeHtmlEntities(match[1].replace(/<[^>]+>/g, ''))
+  )
+}
+
+export function parseGoogleChromeTranslation(data: unknown): string {
+  const parts: string[] = []
+
+  const collectStrings = (value: unknown) => {
+    if (typeof value === 'string') {
+      parts.push(value)
+      return
+    }
+    if (Array.isArray(value)) {
+      value.forEach(collectStrings)
+    }
+  }
+
+  collectStrings(data)
+  return getUsableGoogleTranslation(parts.join(' '))
+}
+
+export async function translateWithGoogleChrome(
+  text: string,
+  sl: Language,
+  tl: Language
+): Promise<string> {
+  const response = await axios.get<unknown>(GOOGLE_CHROME_TRANSLATE_ENDPOINT, {
+    params: {
+      client: 'dict-chrome-ex',
+      sl,
+      tl,
+      q: text
+    }
+  })
+  return parseGoogleChromeTranslation(response.data)
 }
 
 export async function translateWithGoogleMobile(
@@ -66,6 +135,26 @@ export async function translateWithGoogleMobile(
     responseType: 'text'
   })
   return parseGoogleMobileTranslation(response.data)
+}
+
+async function translateWithGoogleFallbacks(
+  text: string,
+  sl: Language,
+  tl: Language
+): Promise<string> {
+  for (const translate of [
+    translateWithGoogleChrome,
+    translateWithGoogleMobile
+  ]) {
+    try {
+      const translatedText = await translate(text, sl, tl)
+      if (translatedText) return translatedText
+    } catch (error) {
+      // Try the next no-key Google transport.
+    }
+  }
+
+  throw new Error('NETWORK_ERROR')
 }
 
 export const search: SearchFunction<
@@ -90,6 +179,16 @@ export const search: SearchFunction<
       apiAsFallback: true,
       order: ['cn', 'com']
     })
+
+    const translatedText = getUsableGoogleTranslation(
+      result.trans && Array.isArray(result.trans.paragraphs)
+        ? result.trans.paragraphs.join('\n')
+        : ''
+    )
+    if (!translatedText) {
+      throw new Error('GOOGLE_INVALID_RESPONSE')
+    }
+
     return machineResult(
       {
         result: {
@@ -107,35 +206,17 @@ export const search: SearchFunction<
       },
       translator.getSupportLanguages()
     )
-  } catch (e) {
-    try {
-      const translatedText = await translateWithGoogleMobile(text, sl, tl)
-      if (translatedText) {
-        return successMachineResult({
-          id: 'google',
-          sl: normalizeMachineLanguage(sl),
-          tl: normalizeMachineLanguage(tl),
-          slInitial: profile.dicts.all.google.options.slInitial,
-          sourceText: text,
-          translatedText,
-          langcodes: translator.getSupportLanguages()
-        })
-      }
-    } catch (fallbackError) {}
-
-    return machineResult(
-      {
-        result: {
-          id: 'google',
-          sl,
-          tl,
-          slInitial: 'hide',
-          searchText: { paragraphs: [''] },
-          trans: { paragraphs: [''] }
-        }
-      },
-      translator.getSupportLanguages()
-    )
+  } catch (error) {
+    const translatedText = await translateWithGoogleFallbacks(text, sl, tl)
+    return successMachineResult({
+      id: 'google',
+      sl: normalizeMachineLanguage(sl),
+      tl: normalizeMachineLanguage(tl),
+      slInitial: profile.dicts.all.google.options.slInitial,
+      sourceText: text,
+      translatedText,
+      langcodes: translator.getSupportLanguages()
+    })
   }
 }
 
