@@ -24,14 +24,14 @@ import {
   isInSaladictExternal,
   isFirefox
 } from '@/_helpers/saladict'
-import {
-  getTextFromSelection,
-  getSentenceFromSelection
-} from 'get-selection-more'
 import { checkSupportedLangs } from '@/_helpers/lang-check'
 import { Message } from '@/typings/message'
 import { isTypeField, newSelectionWord } from './helper'
 import { isTagName } from '@/_helpers/dom'
+import {
+  getSmartSentenceFromSelection,
+  getSmartTextFromSelection
+} from './text-preprocessor'
 
 export function createSelectTextStream(config: AppConfig | null) {
   if (!config) {
@@ -91,7 +91,7 @@ function withTouchMode(config: AppConfig) {
         return { self }
       }
 
-      const text = getTextFromSelection(selection)
+      const text = getSmartTextFromSelection(selection)
 
       if (!checkSupportedLangs(config.language, text)) {
         return { self }
@@ -101,7 +101,7 @@ function withTouchMode(config: AppConfig) {
         return {
           word: {
             text,
-            context: getSentenceFromSelection(selection)
+            context: getSmartSentenceFromSelection(selection)
           },
           self,
           dbClick: clickPeriodCount >= 2,
@@ -133,7 +133,7 @@ function withTouchMode(config: AppConfig) {
       return {
         word: {
           text,
-          context: getSentenceFromSelection(selection)
+          context: getSmartSentenceFromSelection(selection)
         },
         self,
         dbClick: clickPeriodCount >= 2,
@@ -198,7 +198,7 @@ function withoutTouchMode(config: AppConfig) {
       }
 
       const selection = window.getSelection()
-      const text = getTextFromSelection(selection)
+      const text = getSmartTextFromSelection(selection)
 
       if (!checkSupportedLangs(config.language, text)) {
         return { self: false }
@@ -207,7 +207,7 @@ function withoutTouchMode(config: AppConfig) {
       return {
         word: {
           text,
-          context: getSentenceFromSelection(selection)
+          context: getSmartSentenceFromSelection(selection)
         },
         self: false,
         dbClick: clickPeriodCount >= 2,
@@ -285,13 +285,13 @@ export function useInPanelSelect(
       withLatestFrom(clickPeriodCount$),
       map(([{ mouseup, language }, clickPeriodCount]) => {
         const selection = window.getSelection()
-        const text = getTextFromSelection(selection)
+        const text = getSmartTextFromSelection(selection)
 
         return checkSupportedLangs(language, text)
           ? {
               word: {
                 text,
-                context: getSentenceFromSelection(selection)
+                context: getSmartSentenceFromSelection(selection)
               },
               dbClick: clickPeriodCount >= 2,
               mouseX: mouseup.clientX,

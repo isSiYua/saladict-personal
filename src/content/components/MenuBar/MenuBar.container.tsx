@@ -21,6 +21,7 @@ type Dispatchers = ExtractDispatchers<
   | 'searchText'
   | 'updateText'
   | 'addToNoteBook'
+  | 'speakText'
   | 'switchHistory'
   | 'togglePin'
   | 'toggleQSFocus'
@@ -45,7 +46,6 @@ const mapStateToProps: MapStateToProps<
       state.config.qsFocus) ||
       isPopupPage()), // or popup page
   enableSuggest: state.config.searchSuggests,
-  isTrackHistory: state.config.searchHistory,
   histories: state.searchHistory,
   historyIndex: state.historyIndex,
   profiles: state.profiles,
@@ -76,6 +76,12 @@ const mapDispatchToProps: MapDispatchToPropsFunction<
   },
   addToNoteBook: () => {
     dispatch({ type: 'ADD_TO_NOTEBOOK' })
+  },
+  speakText: () => {
+    dispatch((_, getState) => {
+      const text = getState().text
+      if (text) message.send({ type: 'SPEAK_TEXT', payload: { text } })
+    })
   },
   switchHistory: direction => {
     dispatch({ type: 'SWITCH_HISTORY', payload: direction })

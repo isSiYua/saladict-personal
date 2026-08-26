@@ -15,7 +15,8 @@ export const locale: typeof _locale = {
     note: 'Note',
     source: 'Source',
     trans: 'Translation',
-    word: 'Word'
+    word: 'Selected text',
+    speak: 'Voice'
   },
 
   delete: {

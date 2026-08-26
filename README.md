@@ -1,3 +1,22 @@
+# 沙拉查词-个人自用版
+
+基于开源项目 Saladict v7.22.8 修改，保留原有“划词后直接弹出翻译面板”的使用方式，主要针对 Edge、PDF 阅读和技术资料翻译进行了个人化改进。
+
+## 个人版主要改进
+
+- 统一自然语音朗读，支持单词和句子，并增强划词后的自动播放稳定性。
+- 改进 PDF 换行、公式与页面杂项文本的预处理，减少断句和数学公式造成的乱码。
+- 增加 DeepL 与 Gemini 免费层的句子翻译降级链；单词查询不消耗两者额度。
+- 保留并修复谷歌、彩云、有道和百度等原有翻译器的兼容性。
+- 简化查词记录与生词本显示，提供朗读按钮；`Ctrl+D` 和顶部红心均可再次操作以取消收藏。
+- 有道词典默认显示基础释义，柯林斯与长例句通过卡片底部箭头展开。
+
+Edge MV3 安装包见 [`saladict-v7.22.8-codex-edge-mv3.zip`](./saladict-v7.22.8-codex-edge-mv3.zip)。解压后在 Edge 扩展管理页开启开发人员模式，并选择“加载解压缩的扩展”。API 密钥仅保存在浏览器配置中，不包含在源码或安装包内。
+
+---
+
+## 上游项目说明
+
 # Saladict 沙拉查词
 
 [![Version](https://badgen.net/github/tag/crimx/ext-saladict?label=version&icon=github&color=6D5DFB)](https://github.com/crimx/ext-saladict/releases)

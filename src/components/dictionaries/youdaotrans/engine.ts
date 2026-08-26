@@ -8,6 +8,11 @@ import {
   machineResult
 } from '@/components/MachineTrans/engine'
 import { YoudaotransLanguage } from './config'
+import {
+  credentialErrorResult,
+  getAxiosCredentialError
+} from '../machine-custom'
+import { translateWithYoudaoWeb } from './web'
 
 export const getTranslator = memoizeOne(
   () =>
@@ -34,6 +39,10 @@ export const search: SearchFunction<
   MachineTranslatePayload<YoudaotransLanguage>
 > = async (rawText, config, profile, payload) => {
   const translator = getTranslator()
+  const langcodes = translator.getSupportLanguages()
+
+  const appKey = config.dictAuth.youdaotrans.appKey.trim()
+  const key = config.dictAuth.youdaotrans.key.trim()
 
   const { sl, tl, text } = await getMTArgs(
     translator,
@@ -43,12 +52,12 @@ export const search: SearchFunction<
     payload
   )
 
-  const appKey = config.dictAuth.youdaotrans.appKey
-  const key = config.dictAuth.youdaotrans.key
   const translatorConfig = appKey && key ? { appKey, key } : undefined
 
   try {
-    const result = await translator.translate(text, sl, tl, translatorConfig)
+    const result = translatorConfig
+      ? await translator.translate(text, sl, tl, translatorConfig)
+      : await translateWithYoudaoWeb(translator, text, sl, tl)
     return machineResult(
       {
         result: {
@@ -67,6 +76,11 @@ export const search: SearchFunction<
       translator.getSupportLanguages()
     )
   } catch (e) {
+    console.error('[Saladict][Youdao Translate] translation failed', e)
+    const credentialError = getAxiosCredentialError(e)
+    if (translatorConfig && credentialError) {
+      return credentialErrorResult('youdaotrans', credentialError, langcodes)
+    }
     return machineResult(
       {
         result: {
@@ -78,7 +92,7 @@ export const search: SearchFunction<
           trans: { paragraphs: [''] }
         }
       },
-      translator.getSupportLanguages()
+      langcodes
     )
   }
 }

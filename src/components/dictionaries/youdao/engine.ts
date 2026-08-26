@@ -47,20 +47,29 @@ export type YoudaoResult = YoudaoResultLex | YoudaoResultRelated
 
 type YoudaoSearchResult = DictSearchResult<YoudaoResult>
 
-export const search: SearchFunction<YoudaoResult> = async (
-  text,
-  config,
-  profile,
-  payload
-) => {
+export const search: SearchFunction<
+  YoudaoResult,
+  { prefetchedHtml?: string }
+> = async (text, config, profile, payload) => {
   const options = profile.dicts.all.youdao.options
   const transform = await getChsToChz(config.langCode)
+
+  return fetchYoudaoDOM(text, payload.prefetchedHtml)
+    .catch(handleNetWorkError)
+    .then(doc => checkResult(doc, options, transform))
+}
+
+async function fetchYoudaoDOM(
+  text: string,
+  prefetchedHtml?: string
+): Promise<Document> {
+  if (prefetchedHtml) {
+    return new DOMParser().parseFromString(prefetchedHtml, 'text/html')
+  }
 
   return fetchDirtyDOM(
     'https://dict.youdao.com/w/' + encodeURIComponent(text.replace(/\s+/g, ' '))
   )
-    .catch(handleNetWorkError)
-    .then(doc => checkResult(doc, options, transform))
 }
 
 function checkResult(

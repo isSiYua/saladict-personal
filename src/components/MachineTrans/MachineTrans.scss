@@ -33,7 +33,11 @@
     right: 0;
     bottom: 0;
     margin: auto;
-    background: linear-gradient(90deg, rgba(255,255,255,0) 50%, var(--color-background) 90%);
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 50%,
+      var(--color-background) 90%
+    );
     pointer-events: none;
   }
 
@@ -63,12 +67,16 @@
 .MachineTrans-lang-ku, // Kurdish
 .MachineTrans-lang-ug, // Uighur
 .MachineTrans-lang-ur // Urdu
-{
+ {
   direction: rtl !important;
 
   &.MachineTrans-Lines-collapse {
     &::after {
-      background: linear-gradient(270deg, rgba(255,255,255,0) 50%, var(--color-background) 90%);
+      background: linear-gradient(
+        270deg,
+        rgba(255, 255, 255, 0) 50%,
+        var(--color-background) 90%
+      );
     }
   }
 }
@@ -88,18 +96,18 @@
 }
 
 @font-face {
-  font-family: "UKIJ Tuz Basma";
-  src: url("https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.woff2")
-      format("woff2"),
-    url("https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.woff")
-      format("woff"),
-    url("https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.ttf")
-      format("truetype"),
-    url("https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.svg#UKIJTuzBasma-Bold")
-      format("svg");
+  font-family: 'UKIJ Tuz Basma';
+  src: url('https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.woff2')
+      format('woff2'),
+    url('https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.woff')
+      format('woff'),
+    url('https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.ttf')
+      format('truetype'),
+    url('https://ws-image-cdn.subat.cn/fonts/ukij-tuz-basma-bold/UKIJTuzBasma-Bold.svg#UKIJTuzBasma-Bold')
+      format('svg');
   font-style: normal;
 }
 
 .MachineTrans-lang-ug {
-  font-family: "UKIJ Tuz Basma" !important;
+  font-family: 'UKIJ Tuz Basma' !important;
 }

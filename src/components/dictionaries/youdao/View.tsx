@@ -38,7 +38,7 @@ export const DictYoudao: FC<ViewPorps<YoudaoResult>> = ({ result }) => {
         <StrElm className="dictYoudao-Basic" html={result.basic} />
       )}
       {result.collins.length > 0 && (
-        <EntryBox title="柯林斯英汉双解">
+        <EntryBox data-saladict-preview-boundary title="柯林斯英汉双解">
           {result.collins.length > 1 && (
             <select
               value={collinsEntry}

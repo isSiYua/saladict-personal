@@ -220,6 +220,11 @@ export function mergeConfig(
   if (base.panelMaxHeightRatio < 1) {
     base.panelMaxHeightRatio = Math.round(base.panelMaxHeightRatio * 100)
   }
+
+  // This fork intentionally keeps search navigation in Redux memory only.
+  // Imported legacy configs must not silently turn persistent history back on.
+  base.searchHistory = false
+  base.searchHistoryInco = false
   /* ----------------------------------------------- *\
       Post-merge Patch End
   \* ----------------------------------------------- */

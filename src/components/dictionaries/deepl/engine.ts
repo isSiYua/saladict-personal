@@ -68,6 +68,10 @@ export function getDeepLEndpoint(authKey: string): string {
   return authKey.endsWith(':fx') ? DEEPL_FREE_API_ENDPOINT : DEEPL_API_ENDPOINT
 }
 
+export function isDeepLFreeAuthKey(authKey: string): boolean {
+  return authKey.endsWith(':fx')
+}
+
 export function buildDeepLPayload(input: {
   text: string
   sourceLanguage: string
@@ -131,17 +135,21 @@ export const search: SearchFunction<
     config,
     payload
   )
-  const sourceLanguage = payload.sl || 'auto'
+  const sourceLanguage = sl || 'auto'
 
   const auth = (config.dictAuth as any).deepl || {}
   const authKey = typeof auth.authKey === 'string' ? auth.authKey.trim() : ''
   if (!authKey) {
     return credentialRequiredResult('deepl', langcodes)
   }
+  if (!isDeepLFreeAuthKey(authKey)) {
+    return credentialErrorResult('deepl', 'invalid', langcodes)
+  }
 
+  // Free-only guard: never send a paid DeepL key to the Pro endpoint.
   try {
     const response = await axios.post(
-      getDeepLEndpoint(authKey),
+      DEEPL_FREE_API_ENDPOINT,
       buildDeepLPayload({
         text,
         sourceLanguage,
@@ -155,18 +163,18 @@ export const search: SearchFunction<
       }
     )
     const parsed = parseDeepLTranslatedText(response.data)
-    if (!parsed.translatedText) {
-      return emptyMachineResult('deepl', sl, tl, langcodes)
+    if (parsed.translatedText) {
+      return successMachineResult({
+        id: 'deepl',
+        sl: normalizeMachineLanguage(parsed.detectedLanguage || sourceLanguage),
+        tl,
+        slInitial: (profile.dicts.all as any).deepl.options.slInitial,
+        sourceText: text,
+        translatedText: parsed.translatedText,
+        langcodes
+      })
     }
-    return successMachineResult({
-      id: 'deepl',
-      sl: normalizeMachineLanguage(parsed.detectedLanguage || sourceLanguage),
-      tl,
-      slInitial: (profile.dicts.all as any).deepl.options.slInitial,
-      sourceText: text,
-      translatedText: parsed.translatedText,
-      langcodes
-    })
+    return emptyMachineResult('deepl', sl, tl, langcodes)
   } catch (e) {
     const credentialError = getAxiosCredentialError(e)
     if (credentialError) {

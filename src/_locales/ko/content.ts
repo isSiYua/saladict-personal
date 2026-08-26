@@ -13,6 +13,7 @@ export const locale: typeof _locale = {
     searchText: '텍스트 검색',
     openOptions: '설정 열기',
     addToNotebook: '단어장에 추가 (마우스 오른쪽 클릭으로 단어장 열기)',
+    speakText: '현재 단어나 문장 읽기',
     openNotebook: '단어장 열기',
     openHistory: '기록 열기',
     shareImg: '이미지로 공유',

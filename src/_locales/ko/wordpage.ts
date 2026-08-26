@@ -15,7 +15,8 @@ export const locale: typeof _locale = {
     note: '메모',
     source: '출처',
     trans: '번역',
-    word: '단어'
+    word: '선택한 텍스트',
+    speak: '음성'
   },
 
   delete: {

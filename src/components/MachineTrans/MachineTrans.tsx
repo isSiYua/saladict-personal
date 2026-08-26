@@ -10,7 +10,7 @@ import Speaker from '@/components/Speaker'
 import { ViewPorps } from '@/components/dictionaries/helpers'
 import { DictID } from '@/app-config'
 import { message } from '@/_helpers/browser-api'
-import { MachineTranslateResult } from './engine'
+import { MachineTranslateResult, restoreMathExpressions } from './engine'
 import { Trans, useTranslate } from '@/_helpers/i18n'
 
 const rtlLangs = new Set([
@@ -71,7 +71,7 @@ const TText = React.memo<{
     <TSpeaker result={result} source={source} />
     {result[source].paragraphs.map((line, i) => (
       <p key={i} className={`MachineTrans-lang-${lang}`}>
-        {line}
+        {restoreMathExpressions(line)}
       </p>
     ))}
   </div>
@@ -114,13 +114,13 @@ const TTextCollapsable = React.memo<{
           className={`MachineTrans-Lines-collapse MachineTrans-lang-${lang}`}
         >
           <button onClick={expand}>
-            {result[source].paragraphs.join(' ')}
+            {restoreMathExpressions(result[source].paragraphs.join(' '))}
           </button>
         </div>
       ) : (
         result[source].paragraphs.map((line, i) => (
           <p key={i} className={`MachineTrans-lang-${lang}`}>
-            <span>{line}</span>
+            <span>{restoreMathExpressions(line)}</span>
           </p>
         ))
       )}

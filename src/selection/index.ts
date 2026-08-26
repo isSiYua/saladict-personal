@@ -1,9 +1,4 @@
-import {
-  getText,
-  getSentence,
-  getTextFromSelection,
-  getSentenceFromSelection
-} from 'get-selection-more'
+import { getText, getSentence } from 'get-selection-more'
 import { message } from '@/_helpers/browser-api'
 import { createConfigStream } from '@/_helpers/config-manager'
 import { isInDictPanel } from '@/_helpers/saladict'
@@ -20,6 +15,12 @@ import {
 import { createIntantCaptureStream } from './instant-capture'
 import { createQuickSearchStream } from './quick-search'
 import { createSelectTextStream } from './select-text'
+import {
+  getSmartSentenceFromSelection,
+  getSmartTextFromSelection,
+  normalizeSelectedText,
+  isPdfTextLayer
+} from './text-preprocessor'
 
 // Firefox somehow loads it two times
 if (!window.__SALADICT_SELECTION_LOADED__) {
@@ -35,11 +36,16 @@ if (!window.__SALADICT_SELECTION_LOADED__) {
    * Beware that this is run on every frame.
    */
   message.addListener('PRELOAD_SELECTION', () => {
-    const text = getText()
+    const selection = window.getSelection()
+    const text = selection?.rangeCount
+      ? getSmartTextFromSelection(selection)
+      : normalizeSelectedText(getText(), isPdfTextLayer())
     if (text) {
       return newSelectionWord({
         text,
-        context: getSentence()
+        context: selection?.rangeCount
+          ? getSmartSentenceFromSelection(selection)
+          : normalizeSelectedText(getSentence(), isPdfTextLayer())
       })
     }
   })
@@ -51,7 +57,7 @@ if (!window.__SALADICT_SELECTION_LOADED__) {
   message.createStream('EMIT_SELECTION').subscribe(async () => {
     const selection = window.getSelection()
     if (selection && selection.rangeCount > 0) {
-      const text = getTextFromSelection(selection)
+      const text = getSmartTextFromSelection(selection)
       const rect = selection.getRangeAt(0).getBoundingClientRect()
       if (text) {
         sendMessage({
@@ -61,7 +67,7 @@ if (!window.__SALADICT_SELECTION_LOADED__) {
           self: isInDictPanel(selection.anchorNode),
           word: await newSelectionWord({
             text,
-            context: getSentenceFromSelection(selection)
+            context: getSmartSentenceFromSelection(selection)
           }),
           dbClick: false,
           altKey: false,

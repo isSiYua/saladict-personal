@@ -15,6 +15,9 @@ export function mergeProfile(
   const base: ProfileMutable = baseProfile
     ? JSON.parse(JSON.stringify(baseProfile))
     : getDefaultProfile(oldProfile.id)
+  const currentVersion = getDefaultProfile(oldProfile.id).version
+  const needsYoudaoPreviewMigration =
+    !isNumber(oldProfile.version) || oldProfile.version < currentVersion
 
   Object.keys(base).forEach(key => {
     switch (key) {
@@ -150,6 +153,22 @@ export function mergeProfile(
   // hjdict changed korean location
   if ((base.dicts.all.hjdict.options.chsas as string) === 'kor') {
     base.dicts.all.hjdict.options.chsas = 'kr'
+  }
+
+  if (needsYoudaoPreviewMigration) {
+    // Keep Youdao open to its compact basic-definition preview. Longer
+    // Collins and example sections remain behind the in-card expand control.
+    // This is a one-time migration, so later manual choices remain respected.
+    forEach(base.dicts.all.youdao.defaultUnfold, (value, lang) => {
+      if (isBoolean(value)) {
+        set(
+          base,
+          `dicts.all.youdao.defaultUnfold.${lang}`,
+          lang === 'matchAll' ? value : true
+        )
+      }
+    })
+    base.version = currentVersion
   }
   /* ----------------------------------------------- *\
       Patch End

@@ -110,10 +110,15 @@ async function onCommand(command: string) {
       {
         // Send to browser action panel first
         const direction = command === 'next-history' ? 'next' : 'prev'
-        const received = await message.send<'SWITCH_HISTORY', boolean>({
-          type: 'SWITCH_HISTORY',
-          payload: direction
-        })
+        // A closed browser-action/standalone panel has no runtime receiver.
+        // That rejection used to abort here and made the global shortcut feel
+        // intermittent instead of falling back to the active tab.
+        const received = await message
+          .send<'SWITCH_HISTORY', boolean>({
+            type: 'SWITCH_HISTORY',
+            payload: direction
+          })
+          .catch(() => false)
         if (received) return // browser action panel is opened
 
         const tabs = await browser.tabs.query({
@@ -123,10 +128,12 @@ async function onCommand(command: string) {
         if (tabs.length <= 0 || tabs[0].id == null) {
           return
         }
-        await message.send<'SWITCH_HISTORY', boolean>(tabs[0].id, {
-          type: 'SWITCH_HISTORY',
-          payload: direction
-        })
+        await message
+          .send<'SWITCH_HISTORY', boolean>(tabs[0].id, {
+            type: 'SWITCH_HISTORY',
+            payload: direction
+          })
+          .catch(() => false)
       }
       break
     case 'next-profile':

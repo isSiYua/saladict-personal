@@ -15,7 +15,8 @@ export const locale: typeof _locale = {
     note: 'टिप्पणी',
     source: 'स्रोत',
     trans: 'अनुवाद',
-    word: 'शब्द'
+    word: 'चयन गरिएको पाठ',
+    speak: 'आवाज'
   },
 
   delete: {

@@ -14,6 +14,7 @@ export const locale: typeof _locale = {
     openOptions: 'Abrir opciones',
     addToNotebook:
       'Agregar al cuaderno. Haga clic derecho para abrir el cuaderno',
+    speakText: 'Leer en voz alta la palabra o frase actual',
     openNotebook: 'Abrir cuaderno',
     openHistory: 'Abrir historial',
     shareImg: 'Compartir como imagen',

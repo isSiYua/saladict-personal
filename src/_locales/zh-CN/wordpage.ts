@@ -13,7 +13,8 @@ export const locale = {
     note: '笔记',
     source: '来源',
     trans: '翻译',
-    word: '单词'
+    word: '划词内容',
+    speak: '发音'
   },
 
   delete: {

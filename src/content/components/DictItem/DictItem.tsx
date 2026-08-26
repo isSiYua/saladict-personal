@@ -52,6 +52,10 @@ export const DictItem: FC<DictItemProps> = props => {
   )
   /** Rendered height */
   const [offsetHeight, setOffsetHeight] = useState(10)
+  /** Optional content-defined cutoff for the half-expanded preview. */
+  const [contentPreviewHeight, setContentPreviewHeight] = useState<
+    number | null
+  >(null)
 
   const visibleHeight = useMemo(
     () =>
@@ -61,9 +65,14 @@ export const DictItem: FC<DictItemProps> = props => {
           ? 10
           : foldState === 'FULL'
           ? offsetHeight
-          : Math.min(offsetHeight, props.preferredHeight)
+          : Math.min(
+              offsetHeight,
+              contentPreviewHeight == null
+                ? props.preferredHeight
+                : contentPreviewHeight
+            )
       ),
-    [foldState, offsetHeight, props.preferredHeight]
+    [foldState, offsetHeight, props.preferredHeight, contentPreviewHeight]
   )
 
   useEffect(() => {
@@ -79,8 +88,33 @@ export const DictItem: FC<DictItemProps> = props => {
   }, [visibleHeight])
 
   const dictItemRef = useRef<HTMLDivElement | null>(null)
+  const dictItemMeasureRef = useRef<HTMLElement | null>(null)
   // container element in shadow dom
   const dictRootRef = useRef<HTMLDivElement | null>(null)
+
+  const handleHeightChanged = useCallback((height: number) => {
+    setOffsetHeight(height)
+
+    const measure = dictItemMeasureRef.current
+    const boundary = dictRootRef.current?.querySelector<HTMLElement>(
+      '[data-saladict-preview-boundary]'
+    )
+
+    if (!measure || !boundary) {
+      setContentPreviewHeight(null)
+      return
+    }
+
+    setContentPreviewHeight(
+      Math.max(
+        10,
+        Math.round(
+          boundary.getBoundingClientRect().top -
+            measure.getBoundingClientRect().top
+        )
+      )
+    )
+  }, [])
 
   const preCatalogSelect = useCallback(
     async (item: { key: string; value: string }) => {
@@ -149,8 +183,8 @@ export const DictItem: FC<DictItemProps> = props => {
         style={{ height: visibleHeight }}
         onClick={searchLinkText}
       >
-        <article className="dictItem-BodyMesure">
-          <ResizeReporter reportInit onHeightChanged={setOffsetHeight} />
+        <article ref={dictItemMeasureRef} className="dictItem-BodyMesure">
+          <ResizeReporter reportInit onHeightChanged={handleHeightChanged} />
           {props.TestComp ? (
             props.searchStatus === 'FINISH' &&
             props.searchResult &&

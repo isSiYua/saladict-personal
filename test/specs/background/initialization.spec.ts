@@ -119,4 +119,22 @@ describe('Initialization', () => {
       expect(checkUpdate).toHaveBeenCalledTimes(0)
     })
   })
+
+  describe('history shortcuts', () => {
+    it('falls back to the active tab when no standalone panel is open', async () => {
+      browser.runtime.sendMessage.callsFake(() =>
+        Promise.reject(new Error('Receiving end does not exist'))
+      )
+      browser.tabs.query.callsFake(() => Promise.resolve([{ id: 42 }]))
+      browser.tabs.sendMessage.callsFake(() => Promise.resolve(true))
+      ;(browser as any).commands.onCommand.dispatch('next-history')
+      await timer(20)
+
+      expect(browser.tabs.sendMessage.calledOnce).toBeTruthy()
+      expect(browser.tabs.sendMessage.firstCall.args).toEqual([
+        42,
+        { type: 'SWITCH_HISTORY', payload: 'next' }
+      ])
+    })
+  })
 })

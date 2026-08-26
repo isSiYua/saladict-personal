@@ -14,7 +14,8 @@ import { DictSearchResult } from './helpers'
 import {
   MachineCredentialError,
   MachineTranslateResult,
-  machineResult
+  machineResult,
+  restoreMathExpressions
 } from '@/components/MachineTrans/engine'
 
 export const commonMachineLanguages = [
@@ -317,8 +318,12 @@ export function successMachineResult<ID extends DictID>({
         sl,
         tl,
         slInitial,
-        searchText: { paragraphs: splitParagraphs(sourceText) },
-        trans: { paragraphs: splitParagraphs(translatedText) }
+        searchText: {
+          paragraphs: splitParagraphs(restoreMathExpressions(sourceText))
+        },
+        trans: {
+          paragraphs: splitParagraphs(restoreMathExpressions(translatedText))
+        }
       }
     },
     langcodes

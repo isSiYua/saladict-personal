@@ -38,6 +38,19 @@ export const searchStart: ActionHandler<
     return state
   }
 
+  const useQuotaTranslators = shouldUseQuotaTranslators(word.text)
+  const selectedDictsWithDeepL =
+    useQuotaTranslators &&
+    activeProfile.dicts.all.deepl &&
+    !activeProfile.dicts.selected.includes('deepl')
+      ? [...activeProfile.dicts.selected, 'deepl' as const]
+      : activeProfile.dicts.selected
+  // DeepL is sentence-only. Gemini is its quota fallback, so both are kept
+  // out of word/short-term lookups even when an imported profile selected them.
+  const selectedDicts = selectedDictsWithDeepL.filter(
+    id => id !== 'gemini' && (useQuotaTranslators || id !== 'deepl')
+  )
+
   return {
     ...state,
     text: word.text,
@@ -59,10 +72,13 @@ export const searchStart: ActionHandler<
                 }
               : d
           )
-        : activeProfile.dicts.selected
+        : selectedDicts
             .filter(id => {
               // dicts that should be rendered
               const dict = activeProfile.dicts.all[id]
+              if (id === 'youdao' && !shouldUseYoudaoDictionary(word.text)) {
+                return false
+              }
               if (checkSupportedLangs(dict.selectionLang, word.text)) {
                 const wordCount = countWords(word.text)
                 const { min, max } = dict.selectionWC
@@ -87,6 +103,70 @@ export const searchStart: ActionHandler<
               }
             })
   }
+}
+
+/**
+ * Reserve limited translation quotas for sentences and longer fragments.
+ * English technical tokens and noun phrases (kernel fusion, GPU memory
+ * allocation, std::vector<T>) stay with dictionaries and ordinary
+ * translators. Chinese technical terms are commonly several characters long,
+ * so sentence cues are used instead of length alone.
+ */
+export function shouldUseQuotaTranslators(text: string): boolean {
+  const trimmed = text.trim()
+  if (!trimmed) return false
+
+  const hasSentenceEnding = /[.!?。！？]\s*$/.test(trimmed)
+  const cjkCharacters = trimmed.match(
+    /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/g
+  )
+
+  if (cjkCharacters) {
+    return (
+      hasSentenceEnding ||
+      (cjkCharacters.length >= 8 && /[的是了在将会把被得]/.test(trimmed))
+    )
+  }
+
+  // A single whitespace-free token is a word/identifier even when punctuation
+  // inside it makes countWords report multiple parts (for example C++ or a.b).
+  if (!/\s/.test(trimmed)) return false
+
+  const wordCount = countWords(trimmed)
+  const hasFiniteVerbCue = /\b(?:am|is|are|was|were|be|been|being|have|has|had|do|does|did|can|could|will|would|shall|should|may|might|must)\b/i.test(
+    trimmed
+  )
+
+  return (
+    hasSentenceEnding || wordCount >= 6 || (wordCount >= 3 && hasFiniteVerbCue)
+  )
+}
+
+/**
+ * Youdao Dictionary is a lexicon, not the separate Youdao translator. Keep it
+ * for words and short established terms, but hide its empty header for
+ * sentences and accidentally selected fragments such as "Machine learning (M".
+ */
+export function shouldUseYoudaoDictionary(text: string): boolean {
+  const trimmed = text.trim()
+  if (!trimmed) return false
+
+  const lexicalText = trimmed.replace(/[.!?。！？]+$/, '').trim()
+  if (!lexicalText) return false
+
+  const cjkCharacters = lexicalText.match(
+    /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/g
+  )
+  if (cjkCharacters) {
+    return (
+      cjkCharacters.length <= 8 &&
+      !(cjkCharacters.length >= 6 && /[的是了在将会把被得]/.test(lexicalText))
+    )
+  }
+
+  if (!/\s/.test(lexicalText)) return true
+
+  return !/[.!?]\s*$/.test(trimmed) && countWords(lexicalText) <= 2
 }
 
 export default searchStart

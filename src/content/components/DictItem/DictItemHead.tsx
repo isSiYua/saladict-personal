@@ -50,7 +50,9 @@ export const DictItemHead: FC<DictItemHeadProps> = props => {
   const icon = useMemo(
     () =>
       browser.runtime.getURL(
-        require('@/components/dictionaries/' + props.dictID + '/favicon.png')
+        require('@/components/dictionaries/' +
+          (props.dictID === 'gemini' ? 'google' : props.dictID) +
+          '/favicon.png')
       ),
     [props.dictID]
   )

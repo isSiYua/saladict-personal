@@ -1,17 +1,49 @@
 import { combineEpics } from 'redux-observable'
-import { from, of, EMPTY } from 'rxjs'
-import { map, mapTo, mergeMap, filter, pairwise } from 'rxjs/operators'
+import { from, EMPTY } from 'rxjs'
+import { map, mapTo, mergeMap, concatMap, pairwise } from 'rxjs/operators'
 
-import { isPopupPage, isStandalonePage } from '@/_helpers/saladict'
-import { saveWord } from '@/_helpers/record-manager'
+import {
+  saveWord,
+  deleteWords,
+  getWordsByText
+} from '@/_helpers/record-manager'
 
 import { StoreAction, StoreState } from '../modules'
 import { ofType } from './utils'
 
 import searchStartEpic from './searchStart.epic'
 import newSelectionEpic from './newSelection.epic'
-import { translateCtxs, genCtxText } from '@/_helpers/translateCtx'
+import { translateNotebookText } from '@/_helpers/translateCtx'
 import { message } from '@/_helpers/browser-api'
+import { restoreMathExpressions } from '@/components/MachineTrans/engine'
+
+const machineTranslatorIds = new Set([
+  'deepl',
+  'google',
+  'caiyun',
+  'youdaotrans',
+  'baidu',
+  'tencent',
+  'bingtrans',
+  'deeplx',
+  'alibaba',
+  'niutrans',
+  'volc'
+])
+
+function currentPanelTranslation(state: StoreState): string {
+  const completed = state.renderedDicts.filter(
+    dict => dict.searchStatus === 'FINISH' && machineTranslatorIds.has(dict.id)
+  )
+  completed.sort((a, b) => (a.id === 'deepl' ? -1 : b.id === 'deepl' ? 1 : 0))
+  for (const dict of completed) {
+    const paragraphs = dict.searchResult?.trans?.paragraphs
+    if (Array.isArray(paragraphs) && paragraphs.some(Boolean)) {
+      return restoreMathExpressions(paragraphs.join('\n')).trim()
+    }
+  }
+  return ''
+}
 
 export const epics = combineEpics<StoreAction, StoreAction, StoreState>(
   /** Start searching text. This will also send to Redux. */
@@ -47,72 +79,49 @@ export const epics = combineEpics<StoreAction, StoreAction, StoreState>(
   (action$, state$) =>
     action$.pipe(
       ofType('ADD_TO_NOTEBOOK'),
-      mergeMap(() => {
-        if (state$.value.config.editOnFav) {
-          const word = state$.value.searchHistory[state$.value.historyIndex]
-
-          if (isPopupPage() || isStandalonePage()) {
-            const { width: screenWidth, height: screenHeight } = window.screen
-            const width = Math.round(Math.min(Math.max(screenWidth, 440), 640))
-            const height = Math.round(Math.min(screenHeight - 150, 800))
-
-            let wordString = ''
-            try {
-              wordString = encodeURIComponent(JSON.stringify(word))
-            } catch (e) {
-              console.warn(e)
-            }
-
-            browser.windows
-              .create({
-                type: 'popup',
-                url: browser.runtime.getURL(
-                  `word-editor.html?word=${wordString}`
-                ),
-                top: Math.round((screenHeight - height) / 2),
-                left: Math.round((screenWidth - width) / 2),
-                width,
-                height
-              })
-              .catch(e => {
-                console.warn(e)
-              })
-
-            return EMPTY
-          }
-
-          return of({
-            type: 'WORD_EDITOR_STATUS',
-            payload: { word, translateCtx: true }
-          } as const)
-        }
-
+      // Serialize rapid shortcut presses so add -> remove cannot race.
+      concatMap(() => {
         return from(
           (async () => {
-            const word =
-              state$.value.searchHistory[state$.value.searchHistory.length - 1]
+            const state = state$.value
+            const word = state.searchHistory[state.historyIndex]
+            const shouldFavorite = state.isFav
             if (word) {
               try {
-                word.trans = genCtxText(
-                  word.trans,
-                  await translateCtxs(
-                    word.context || word.text,
-                    state$.value.config.ctxTrans
-                  )
-                )
-                await saveWord('notebook', word)
-                return true
+                if (shouldFavorite) {
+                  const panelTranslation = currentPanelTranslation(state)
+                  const trans =
+                    panelTranslation ||
+                    (await translateNotebookText(word.text, state.config))
+                  await saveWord('notebook', { ...word, trans })
+                } else {
+                  const matches = await getWordsByText('notebook', word.text)
+                  if (matches.length > 0) {
+                    await deleteWords(
+                      'notebook',
+                      matches.map(match => match.date)
+                    )
+                  }
+                }
+                return null
               } catch (e) {
                 console.warn(e)
-                return false
+                return !shouldFavorite
               }
             }
-            return false
+            return !shouldFavorite
           })()
         ).pipe(
-          // dim icon if failed
-          filter(isSuccess => !isSuccess),
-          mapTo({ type: 'WORD_IN_NOTEBOOK', payload: false } as const)
+          mergeMap(rollbackState =>
+            rollbackState == null
+              ? EMPTY
+              : from([
+                  {
+                    type: 'WORD_IN_NOTEBOOK',
+                    payload: rollbackState
+                  } as const
+                ])
+          )
         )
       })
     ),

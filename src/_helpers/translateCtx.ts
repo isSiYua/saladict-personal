@@ -1,5 +1,8 @@
 import { DictID, AppConfig } from '@/app-config'
-import { MachineTranslateResult } from '@/components/MachineTrans/engine'
+import {
+  MachineTranslateResult,
+  restoreMathExpressions
+} from '@/components/MachineTrans/engine'
 import { message } from './browser-api'
 import { isPDFPage } from './saladict'
 
@@ -14,14 +17,9 @@ export interface FetchDictResultResponse {
   result: MachineTranslateResult<DictID>
 }
 
-/**
- * translate selection context with selected machine translatior
- * @param text search text
- * @param id machine translatior id
- */
-export async function translateCtx(
+export async function translateDictText(
   text: string,
-  id: CtxTranslatorId
+  id: DictID
 ): Promise<string> {
   try {
     const response = await message.send<
@@ -37,15 +35,47 @@ export async function translateCtx(
     })
 
     return (
-      (response &&
-        response.result &&
-        response.result.trans &&
-        response.result.trans.paragraphs.join('\n')) ||
+      (response?.result?.trans?.paragraphs &&
+        restoreMathExpressions(response.result.trans.paragraphs.join('\n'))) ||
       ''
     )
   } catch (e) {
     return ''
   }
+}
+
+/**
+ * translate selection context with selected machine translatior
+ * @param text search text
+ * @param id machine translatior id
+ */
+export async function translateCtx(
+  text: string,
+  id: CtxTranslatorId
+): Promise<string> {
+  return translateDictText(text, id)
+}
+
+/** One concise notebook translation: DeepL with a key, then one enabled fallback. */
+export async function translateNotebookText(
+  text: string,
+  config: AppConfig
+): Promise<string> {
+  const deepLKey = String((config.dictAuth as any).deepl?.authKey || '').trim()
+  if (deepLKey) {
+    const deepL = await translateDictText(text, 'deepl')
+    if (deepL) return deepL
+  }
+
+  const priority: CtxTranslatorId[] = [
+    'google',
+    'caiyun',
+    'youdaotrans',
+    'baidu',
+    'tencent'
+  ]
+  const fallback = priority.find(id => config.ctxTrans[id])
+  return fallback ? translateDictText(text, fallback) : ''
 }
 
 /**

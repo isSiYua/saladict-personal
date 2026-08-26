@@ -33,6 +33,7 @@ import {
   consumePendingPdfOpenForViewer,
   openPdfViewerStandaloneIfNeeded
 } from './pdf-sniffer'
+import { naturalTTSManager } from './natural-tts-manager'
 
 const mv3BackgroundPreferredDicts = new Set<DictID>([
   'alibaba',
@@ -115,8 +116,14 @@ export class BackgroundServer {
         case 'OPEN_URL':
           return openUrl(msg.payload)
         case 'PLAY_AUDIO':
+          naturalTTSManager.stop()
           return getDomTaskBridge().playAudio(msg.payload)
+        case 'SPEAK_TEXT':
+          return getDomTaskBridge()
+            .stopAudio()
+            .then(() => naturalTTSManager.speak(msg.payload))
         case 'STOP_AUDIO':
+          naturalTTSManager.stop()
           return getDomTaskBridge().stopAudio()
         case 'FETCH_DICT_RESULT':
           return this.fetchDictResult(msg.payload)
@@ -135,6 +142,7 @@ export class BackgroundServer {
         case 'OPEN_QS_PANEL':
           return this.openQSPanel()
         case 'CLOSE_QS_PANEL':
+          naturalTTSManager.stop()
           return getDomTaskBridge()
             .stopAudio()
             .then(() => this.qsPanelManager.destroy())
@@ -181,6 +189,7 @@ export class BackgroundServer {
         // This is a workaround for browser action page
         // which does not fire beforeunload event
         port.onDisconnect.addListener(() => {
+          naturalTTSManager.stop()
           getDomTaskBridge().stopAudio()
         })
       }
@@ -207,6 +216,25 @@ export class BackgroundServer {
     }
 
     await this.qsPanelManager.create(word)
+  }
+
+  private async fetchYoudaoDictionaryHtml(text: string): Promise<string> {
+    const url =
+      'https://dict.youdao.com/w/' +
+      encodeURIComponent(text.replace(/\s+/g, ' ').trim())
+    const response = await fetch(url, {
+      credentials: 'omit',
+      headers: {
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Youdao dictionary request failed (${response.status}).`)
+    }
+
+    return response.text()
   }
 
   async searchPageSelection(): Promise<void> {
@@ -286,7 +314,25 @@ export class BackgroundServer {
       }
 
       const runSearch = useOffscreenHost
-        ? () => searchDictInOffscreen(data, appConfig, activeProfile)
+        ? async () => {
+            const offscreenData =
+              data.id === 'youdao'
+                ? {
+                    ...data,
+                    payload: {
+                      ...payload,
+                      prefetchedHtml: await this.fetchYoudaoDictionaryHtml(
+                        data.text
+                      )
+                    }
+                  }
+                : data
+            return searchDictInOffscreen(
+              offscreenData,
+              appConfig,
+              activeProfile
+            )
+          }
         : async () => {
             const { search } = await BackgroundServer.getDictEngine<
               NonNullable<typeof data['payload']>

@@ -7,6 +7,7 @@ import {
   DEEPL_FREE_API_ENDPOINT,
   buildDeepLPayload,
   getDeepLEndpoint,
+  isDeepLFreeAuthKey,
   mapDeepLLanguage,
   mapDeepLSourceLanguage,
   parseDeepLTranslatedText,
@@ -32,6 +33,11 @@ describe('deepl translator', () => {
   it('chooses official DeepL endpoint from the auth key suffix', () => {
     expect(getDeepLEndpoint('abc:fx')).toBe(DEEPL_FREE_API_ENDPOINT)
     expect(getDeepLEndpoint('abc')).toBe(DEEPL_API_ENDPOINT)
+  })
+
+  it('recognizes only DeepL API Free keys as free', () => {
+    expect(isDeepLFreeAuthKey('abc:fx')).toBe(true)
+    expect(isDeepLFreeAuthKey('paid-key')).toBe(false)
   })
 
   it('builds DeepL form payload', () => {
@@ -104,6 +110,24 @@ describe('deepl translator', () => {
 
     expect(result.result.requireCredential).toBe(true)
     expect(result.result.credentialError).toBe('invalid')
+
+    mock.restore()
+  })
+
+  it('never calls the paid DeepL endpoint in free-only mode', async () => {
+    const mock = new AxiosMockAdapter(axios)
+    const config = getDefaultConfig()
+    const profile = getDefaultProfile()
+    ;(config.dictAuth as any).deepl.authKey = 'paid-key'
+
+    const result = await search('hello', config, profile, {
+      isPDF: false,
+      sl: 'en',
+      tl: 'zh-CN'
+    })
+
+    expect(result.result.credentialError).toBe('invalid')
+    expect(mock.history.post).toHaveLength(0)
 
     mock.restore()
   })

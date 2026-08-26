@@ -94,6 +94,9 @@ export type ActionCatalog = CreateActionCatalog<{
     }
   }
 
+  /** Replace an exhausted DeepL result with a separate Gemini fallback card. */
+  GEMINI_FALLBACK_START: {}
+
   UPDATE_PANEL_HEIGHT: {
     payload: {
       area: 'menubar' | 'mtabox' | 'dictlist' | 'waveformbox'

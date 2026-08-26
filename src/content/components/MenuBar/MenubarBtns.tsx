@@ -108,6 +108,7 @@ export const FavBtn: FC<FavBtnProps> = props => {
     <button
       className="menuBar-Btn"
       title={t('tip.addToNotebook')}
+      aria-pressed={isFav}
       {...restProps}
     >
       <svg
@@ -118,6 +119,24 @@ export const FavBtn: FC<FavBtnProps> = props => {
         viewBox="0 0 32 32"
       >
         <path d="M 23.363 2 C 20.105 2 17.3 4.65 16.001 7.42 C 14.701 4.65 11.896 2 8.637 2 C 4.145 2 0.5 5.646 0.5 10.138 C 0.5 19.278 9.719 21.673 16.001 30.708 C 21.939 21.729 31.5 18.986 31.5 10.138 C 31.5 5.646 27.855 2 23.363 2 Z" />
+      </svg>
+    </button>
+  )
+}
+
+/** Unified browser Natural/Online voice. */
+export const SpeakTextBtn: FC<MenubarBtnProps> = props => {
+  const { t, ...restProps } = props
+  return (
+    <button className="menuBar-Btn" title={t('tip.speakText')} {...restProps}>
+      <svg
+        className="menuBar-Btn_Icon"
+        width="30"
+        height="30"
+        viewBox="0 0 32 32"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M3 12h6l8-7v22l-8-7H3V12zm18.2-2.8a1.5 1.5 0 0 1 2.1 0 9.6 9.6 0 0 1 0 13.6 1.5 1.5 0 0 1-2.1-2.1 6.6 6.6 0 0 0 0-9.4 1.5 1.5 0 0 1 0-2.1zm4-4a1.5 1.5 0 0 1 2.1 0 15.2 15.2 0 0 1 0 21.6 1.5 1.5 0 1 1-2.1-2.1 12.2 12.2 0 0 0 0-17.4 1.5 1.5 0 0 1 0-2.1z" />
       </svg>
     </button>
   )

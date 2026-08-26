@@ -19,7 +19,7 @@ import {
   HistoryBackBtn,
   HistoryNextBtn,
   FavBtn,
-  HistoryBtn,
+  SpeakTextBtn,
   NotebookBtn,
   PinBtn,
   CloseBtn,
@@ -37,11 +37,14 @@ export interface MenuBarProps {
   /** is in Notebook */
   isInNotebook: boolean
   addToNoteBook: () => any
+  speakText?: () => any
 
   shouldFocus: boolean
   enableSuggest: boolean
 
-  isTrackHistory: boolean
+  /** Kept for story/backward compatibility; persistent history is disabled. */
+  isTrackHistory?: boolean
+
   histories: Word[]
   historyIndex: number
   switchHistory: (direction: 'prev' | 'next') => void
@@ -146,27 +149,16 @@ export const MenuBar: FC<MenuBarProps> = props => {
           }
         }}
       />
-      {props.isTrackHistory ? (
-        <HistoryBtn
-          t={t}
-          onClick={() =>
-            message.send({
-              type: 'OPEN_URL',
-              payload: { url: 'history.html', self: true }
-            })
-          }
-        />
-      ) : (
-        <NotebookBtn
-          t={t}
-          onClick={() =>
-            message.send({
-              type: 'OPEN_URL',
-              payload: { url: 'notebook.html', self: true }
-            })
-          }
-        />
-      )}
+      <SpeakTextBtn t={t} onClick={props.speakText} disabled={!props.text} />
+      <NotebookBtn
+        t={t}
+        onClick={() =>
+          message.send({
+            type: 'OPEN_URL',
+            payload: { url: 'notebook.html', self: true }
+          })
+        }
+      />
 
       {isQuickSearchPage() ? (
         <>

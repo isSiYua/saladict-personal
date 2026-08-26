@@ -1,5 +1,11 @@
 @import '@/_sass_shared/_reset.scss';
 @import '@/components/Speaker/Speaker.scss';
+
+// The panel now has one predictable Natural/Online voice button. Individual
+// dictionary audio links remain in result data but are intentionally hidden.
+.saladict-Speaker {
+  display: none !important;
+}
 @import '@/components/EntryBox/EntryBox.scss';
 
 .dictRoot {

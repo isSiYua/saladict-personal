@@ -116,10 +116,14 @@ async function importConfig(file: RcFile, t: TFunction) {
     return
   }
 
+  // Use the currently installed schema as the merge base. An older export
+  // should restore the user's old choices without deleting newer settings
+  // (for example the Gemini credential field) that did not exist yet.
+  const currentConfig = await getConfig()
   await storage.sync.clear()
 
   if (baseconfig) {
-    await updateConfig(mergeConfig(baseconfig))
+    await updateConfig(mergeConfig(baseconfig, currentConfig))
   }
 
   if (syncConfig) {

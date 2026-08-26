@@ -1,17 +1,15 @@
 import React, { FC, ReactNode, useMemo } from 'react'
-import i18next, { TFunction } from 'i18next'
-import { Button, Tooltip } from 'antd'
+import { Button } from 'antd'
 import Table, { ColumnsType, TableProps } from 'antd/lib/table'
 import { Word, DBArea } from '@/_helpers/record-manager'
 import { message } from '@/_helpers/browser-api'
 import { useTranslate } from '@/_helpers/i18n'
 
 export const colSelectionWidth = 48
-const colDateWidth = 150
-const colEditWidth = 80
-const fixedWidth = colSelectionWidth + colDateWidth + colEditWidth
-const colTextWidth = `calc((100vw - ${fixedWidth}px) / 7)`
-const restWidth = `calc((100vw - ${fixedWidth}px) * 2 / 7)`
+const colSpeakWidth = 100
+const fixedWidth = colSelectionWidth + colSpeakWidth
+const colTextWidth = `calc((100vw - ${fixedWidth}px) * 3 / 7)`
+const restWidth = `calc((100vw - ${fixedWidth}px) * 4 / 7)`
 
 export interface WordTableProps
   extends Pick<
@@ -41,14 +39,6 @@ export const WordTable: FC<WordTableProps> = props => {
         ]
       },
       {
-        title: t('column.source'),
-        dataIndex: 'context',
-        key: 'context',
-        width: restWidth,
-        align: 'center',
-        render: renderSource
-      },
-      {
         title: t('column.trans'),
         dataIndex: 'trans',
         key: 'trans',
@@ -56,26 +46,11 @@ export const WordTable: FC<WordTableProps> = props => {
         render: renderTrans
       },
       {
-        title: t('column.note'),
-        dataIndex: 'note',
-        key: 'note',
-        width: restWidth,
-        render: renderNote
-      },
-      {
-        title: t('column.date'),
-        dataIndex: 'date',
-        key: 'date',
-        width: colDateWidth,
+        title: t('column.speak'),
+        key: 'speak',
+        width: colSpeakWidth,
         align: 'center',
-        sorter: true,
-        render: renderDate
-      },
-      {
-        title: t(`column.${props.area === 'notebook' ? 'edit' : 'add'}`),
-        key: 'edit',
-        align: 'center',
-        render: (_, record) => renderEdit(t, props.area, record)
+        render: (_, record) => renderSpeak(t('column.speak'), record)
       }
     ],
     [ready, props.area]
@@ -96,24 +71,6 @@ export const WordTable: FC<WordTableProps> = props => {
   )
 }
 
-function renderSource(_: any, record: Word): ReactNode {
-  return (
-    <React.Fragment key={record.date}>
-      {record.context && (
-        <p className="wordpage-Record_Context">{record.context}</p>
-      )}
-      {record.title && (
-        <p className="wordpage-Source_Footer">
-          {record.favicon && (
-            <img className="wordpage-Record_Favicon" src={record.favicon} />
-          )}
-          <span className="wordpage-Record_Title">{record.title}</span>
-        </p>
-      )}
-    </React.Fragment>
-  )
-}
-
 function renderParagraphs(text?: string): ReactNode {
   if (!text) {
     return ''
@@ -122,47 +79,38 @@ function renderParagraphs(text?: string): ReactNode {
 }
 
 function renderTrans(_: any, record: Word): ReactNode {
-  return renderParagraphs(record.trans)
+  return renderParagraphs(getSimpleTranslation(record.trans))
 }
 
-function renderNote(_: any, record: Word): ReactNode {
-  return renderParagraphs(record.note)
-}
+export function getSimpleTranslation(text = ''): string {
+  const translations: { id: string; text: string }[] = []
+  const matcher = /\[:: (\w+) ::\]\n([\s\S]+?)(?=\n\n\[:: |\n-{15})/g
+  let match: RegExpExecArray | null
+  while ((match = matcher.exec(text))) {
+    translations.push({ id: match[1], text: match[2].trim() })
+  }
+  if (!translations.length) return text.replace(/\n-{15}\s*$/g, '').trim()
 
-function renderDate(datenum: number): ReactNode {
-  const date = new Date(datenum)
+  const priority = ['deepl', 'google', 'caiyun', 'youdaotrans', 'baidu']
   return (
-    <Tooltip
-      key={datenum}
-      placement="topRight"
-      title={date.toLocaleString(i18next.language)}
-    >
-      <>{date.toLocaleDateString(i18next.language)}</>
-    </Tooltip>
-  )
+    priority
+      .map(id => translations.find(item => item.id === id))
+      .find(Boolean) || translations[0]
+  ).text
 }
 
-function renderEdit(t: TFunction, area: DBArea, record: Word): ReactNode {
+function renderSpeak(label: string, record: Word): ReactNode {
   return (
     <Button
       key={record.date}
       size="small"
-      onClick={() => {
-        const word = {
-          ...record,
-          // give it a new date if it's from history
-          date: area === 'notebook' ? record.date : Date.now()
-        }
-        // wait till selection ends
-        setTimeout(() => {
-          message.self.send({
-            type: 'UPDATE_WORD_EDITOR_WORD',
-            payload: { word }
-          })
-        }, 500)
-      }}
+      title={label}
+      aria-label={label}
+      onClick={() =>
+        message.send({ type: 'SPEAK_TEXT', payload: { text: record.text } })
+      }
     >
-      {t(`column.${area === 'notebook' ? 'edit' : 'add'}`)}
+      🔊
     </Button>
   )
 }

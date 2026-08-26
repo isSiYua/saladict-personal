@@ -19,6 +19,10 @@ import {
   url as deeplxUrl
 } from '@/components/dictionaries/deeplx/auth'
 import {
+  auth as gemini,
+  url as geminiUrl
+} from '@/components/dictionaries/gemini/auth'
+import {
   auth as niutrans,
   url as niutransUrl
 } from '@/components/dictionaries/niutrans/auth'
@@ -41,6 +45,7 @@ export const defaultDictAuths = {
   caiyun,
   deepl,
   deeplx,
+  gemini,
   niutrans,
   tencent,
   volc,
@@ -55,6 +60,7 @@ export const defaultDictAuthUrls: { [id in keyof DictAuths]: string } = {
   caiyun: caiyunUrl,
   deepl: deeplUrl,
   deeplx: deeplxUrl,
+  gemini: geminiUrl,
   niutrans: niutransUrl,
   tencent: tencentUrl,
   volc: volcUrl,

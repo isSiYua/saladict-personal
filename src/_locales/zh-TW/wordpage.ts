@@ -15,7 +15,8 @@ export const locale: typeof _locale = {
     note: '筆記',
     source: '來源',
     trans: '翻譯',
-    word: '單字'
+    word: '劃詞內容',
+    speak: '發音'
   },
 
   delete: {

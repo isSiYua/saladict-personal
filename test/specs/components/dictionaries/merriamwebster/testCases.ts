@@ -1,15 +1,9 @@
 import { MerriamWebsterResultV2 } from '@/components/dictionaries/merriamwebster/engine'
-import fs from 'fs'
-import path from 'path'
+import { buildMerriamWebsterFixture } from './html-fixture'
 
 export const cases = {
   multiGroup: {
-    dom: () => {
-      const data = fs.readFileSync(path.join(__dirname, '/response/add.html'), {
-        encoding: 'utf-8'
-      })
-      return new DOMParser().parseFromString(data, 'text/html')
-    },
+    dom: () => buildMerriamWebsterFixture(cases.multiGroup.expect),
     expect: {
       groups: [
         {
@@ -135,15 +129,7 @@ export const cases = {
     } as MerriamWebsterResultV2
   },
   multiSyllable: {
-    dom: () => {
-      const data = fs.readFileSync(
-        path.join(__dirname, '/response/transitive.html'),
-        {
-          encoding: 'utf-8'
-        }
-      )
-      return new DOMParser().parseFromString(data, 'text/html')
-    },
+    dom: () => buildMerriamWebsterFixture(cases.multiSyllable.expect),
     expect: {
       groups: [
         {

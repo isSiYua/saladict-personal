@@ -164,6 +164,18 @@ export type MessageConfig = MessageConfigType<{
     payload: string
   }
 
+  SPEAK_TEXT: {
+    payload: {
+      text: string
+      lang?: string
+    }
+    response: {
+      voiceName?: string
+      lang: string
+      remote: boolean
+    }
+  }
+
   STOP_AUDIO: {}
 
   LAST_PLAY_AUDIO: {

@@ -13,6 +13,7 @@ import deepl from '@/components/dictionaries/deepl/config'
 import deeplx from '@/components/dictionaries/deeplx/config'
 import etymonline from '@/components/dictionaries/etymonline/config'
 import eudic from '@/components/dictionaries/eudic/config'
+import gemini from '@/components/dictionaries/gemini/config'
 import google from '@/components/dictionaries/google/config'
 import guoyu from '@/components/dictionaries/guoyu/config'
 import hjdict from '@/components/dictionaries/hjdict/config'
@@ -51,6 +52,7 @@ export const defaultAllDicts = {
   deeplx: deeplx(),
   etymonline: etymonline(),
   eudic: eudic(),
+  gemini: gemini(),
   google: google(),
   guoyu: guoyu(),
   hjdict: hjdict(),

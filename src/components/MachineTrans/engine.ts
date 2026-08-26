@@ -31,6 +31,48 @@ export interface MachineTranslateResult<ID extends DictID> {
   requireCredential?: boolean
 }
 
+const protectedMathPattern = /\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|(?:[A-Za-z][\w]*(?:\([^\n)]*\))?|[⟨{][^\n]{1,80})\s*(?:=|:=|∈|→|≤|≥|≈|≠|<|>)\s*[^,.;\n]{1,120}/g
+
+function utf16Hex(text: string): string {
+  return text
+    .split('')
+    .map(char =>
+      char
+        .charCodeAt(0)
+        .toString(16)
+        .padStart(4, '0')
+    )
+    .join('')
+}
+
+function fromUtf16Hex(hex: string): string {
+  return (hex.match(/.{4}/g) || [])
+    .map(value => String.fromCharCode(parseInt(value, 16)))
+    .join('')
+}
+
+/** Encode formulas into translator-resistant tokens that carry their own source. */
+export function protectMathExpressions(text: string): string {
+  return text.replace(protectedMathPattern, formula => {
+    return `SALADICTMATH_${utf16Hex(formula)}_ENDMATH`
+  })
+}
+
+/** Restore exact source formulas even after a translator changes token casing. */
+export function restoreMathExpressions(text: string): string {
+  return text.replace(
+    /SALADICTMATH[ _-]*([0-9a-f\s_-]+?)[ _-]*ENDMATH/gi,
+    (token, encoded: string) => {
+      const hex = encoded.replace(/[^0-9a-f]/gi, '')
+      try {
+        return hex.length % 4 === 0 ? fromUtf16Hex(hex) : token
+      } catch (error) {
+        return token
+      }
+    }
+  )
+}
+
 type DefaultMachineOptions<Lang extends Language> = {
   /** Keep linebreaks */
   keepLF: 'none' | 'all' | 'webpage' | 'pdf'
@@ -86,6 +128,8 @@ export async function getMTArgs(
     isPDF?: boolean
   }
 ): Promise<{ sl: Language; tl: Language; text: string }> {
+  text = protectMathExpressions(text)
+
   if (
     options.keepLF === 'none' ||
     (options.keepLF === 'pdf' && !payload.isPDF) ||

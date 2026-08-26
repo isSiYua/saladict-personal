@@ -164,14 +164,11 @@ export const actionHandlers: ActionHandlers<State, ActionCatalog> = {
     isFav: payload
   }),
 
-  ADD_TO_NOTEBOOK: state =>
-    state.config.editOnFav && !isStandalonePage()
-      ? state
-      : {
-          ...state,
-          // epic will set this back to false if transation failed
-          isFav: true
-        },
+  ADD_TO_NOTEBOOK: state => ({
+    ...state,
+    // The persistence epic rolls this back if saving or deleting fails.
+    isFav: !state.isFav
+  }),
 
   SEARCH_START: searchStart,
 
@@ -193,6 +190,33 @@ export const actionHandlers: ActionHandlers<State, ActionCatalog> = {
             }
           : d
       )
+    }
+  },
+
+  GEMINI_FALLBACK_START: state => {
+    const deeplIndex = state.renderedDicts.findIndex(d => d.id === 'deepl')
+    const withoutGemini = state.renderedDicts.filter(d => d.id !== 'gemini')
+    const collapsed = withoutGemini.map(d =>
+      d.id === 'deepl'
+        ? {
+            id: d.id,
+            searchStatus: 'IDLE' as const,
+            searchResult: null
+          }
+        : d
+    )
+    const insertAt = deeplIndex < 0 ? collapsed.length : deeplIndex + 1
+    return {
+      ...state,
+      renderedDicts: [
+        ...collapsed.slice(0, insertAt),
+        {
+          id: 'gemini' as const,
+          searchStatus: 'SEARCHING' as const,
+          searchResult: null
+        },
+        ...collapsed.slice(insertAt)
+      ]
     }
   },
 

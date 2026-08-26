@@ -33,7 +33,9 @@ type Cookie = {
 
 export type CookieHeaderNetworkCompatibilityOptions = {
   origin: string
+  originHeader?: string
   cookieDomain?: string
+  cookieOperation?: 'append' | 'set'
   topLevelSite: string
   urls: string[]
   ruleId: number
@@ -130,6 +132,13 @@ export function createCookieHeaderNetworkCompatibility(
             'Referer',
             options.referer || options.origin
           )
+          if (options.originHeader) {
+            setRequestHeader(
+              details.requestHeaders,
+              'Origin',
+              options.originHeader
+            )
+          }
           if (currentCookieHeader) {
             upsertCookieHeader(details.requestHeaders, currentCookieHeader)
           }
@@ -158,10 +167,18 @@ async function installMv3HeaderRule(
     }
   ]
 
+  if (options.originHeader) {
+    requestHeaders.push({
+      header: 'origin',
+      operation: 'set',
+      value: options.originHeader
+    })
+  }
+
   if (cookieHeader) {
     requestHeaders.push({
       header: 'cookie',
-      operation: 'append',
+      operation: options.cookieOperation || 'append',
       value: cookieHeader
     })
   }

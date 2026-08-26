@@ -3,6 +3,34 @@ import { mergeConfig } from '@/app-config/merge-config'
 import { getDefaultProfile } from '@/app-config/profiles'
 
 describe('mergeConfig', () => {
+  it('keeps ordinary search history session-only after importing old configs', () => {
+    const oldConfig = getDefaultConfig() as AppConfigMutable
+    oldConfig.searchHistory = true
+    oldConfig.searchHistoryInco = true
+
+    const mergedConfig = mergeConfig(oldConfig)
+    expect(mergedConfig.searchHistory).toBe(false)
+    expect(mergedConfig.searchHistoryInco).toBe(false)
+  })
+
+  it('adds an empty Gemini Free credential to legacy imports', () => {
+    const oldConfig = getDefaultConfig() as AppConfigMutable
+    delete (oldConfig.dictAuth as any).gemini
+
+    expect(mergeConfig(oldConfig).dictAuth.gemini).toEqual({ apiKey: '' })
+  })
+
+  it('does not erase newer settings that are absent from an old import', () => {
+    const oldConfig = getDefaultConfig() as AppConfigMutable
+    const currentConfig = getDefaultConfig() as AppConfigMutable
+    delete (oldConfig.dictAuth as any).gemini
+    currentConfig.dictAuth.gemini.apiKey = 'existing-gemini-key'
+
+    expect(mergeConfig(oldConfig, currentConfig).dictAuth.gemini).toEqual({
+      apiKey: 'existing-gemini-key'
+    })
+  })
+
   it('preserves Korean as the configured locale', () => {
     const oldConfig = getDefaultConfig() as AppConfigMutable
     oldConfig.langCode = 'ko'
@@ -35,6 +63,7 @@ describe('mergeConfig', () => {
     oldConfig.dictAuth.deepl.authKey = 'deepl-key'
     oldConfig.dictAuth.deeplx.apiUrl = 'https://deeplx.example.com'
     oldConfig.dictAuth.deeplx.token = 'deeplx-token'
+    oldConfig.dictAuth.gemini.apiKey = 'gemini-free-key'
     ;(oldConfig.dictAuth as any).sogou = {
       token: 'legacy'
     }
@@ -64,12 +93,16 @@ describe('mergeConfig', () => {
       apiUrl: 'https://deeplx.example.com',
       token: 'deeplx-token'
     })
+    expect(mergedConfig.dictAuth.gemini).toEqual({
+      apiKey: 'gemini-free-key'
+    })
     expect(Object.keys(mergedConfig.dictAuth).sort()).toEqual([
       'alibaba',
       'baidu',
       'caiyun',
       'deepl',
       'deeplx',
+      'gemini',
       'niutrans',
       'tencent',
       'volc',
@@ -85,7 +118,8 @@ describe('mergeConfig', () => {
       'volc',
       'niutrans',
       'deepl',
-      'deeplx'
+      'deeplx',
+      'gemini'
     ] as const) {
       expect(profile.dicts.all[id].options.slInitial).toBe('collapse')
       expect(profile.dicts.all[id].options.tl).toBe('default')

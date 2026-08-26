@@ -20,7 +20,7 @@ export default getDefaultProfile
 
 export function _getDefaultProfile(id?: string) {
   return {
-    version: 1,
+    version: 3,
 
     id: id || genUniqueKey(),
 
