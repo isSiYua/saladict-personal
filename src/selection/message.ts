@@ -1,5 +1,8 @@
 import { Message } from '@/typings/message'
-import { message } from '@/_helpers/browser-api'
+import {
+  ignoreExpectedExtensionDisconnect,
+  message
+} from '@/_helpers/browser-api'
 
 interface PostMessageEvent extends MessageEvent {
   data: {
@@ -94,10 +97,12 @@ export function sendMessage(payload: Message<'SELECTION'>['payload']) {
       console.log('New selection', payload)
     }
 
-    message.self.send({
-      type: 'SELECTION',
-      payload
-    })
+    message.self
+      .send({
+        type: 'SELECTION',
+        payload
+      })
+      .catch(ignoreExpectedExtensionDisconnect)
   } else {
     // post to upper frames/window
     window.parent.postMessage(
@@ -136,5 +141,8 @@ export function sendEmptyMessage(isDictPanel: boolean) {
     console.log('New selection', msg.payload)
   }
 
-  return message.self.send(msg)
+  return message.self.send(msg).catch(error => {
+    ignoreExpectedExtensionDisconnect(error)
+    return undefined
+  })
 }

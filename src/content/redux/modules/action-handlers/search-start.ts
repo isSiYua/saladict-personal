@@ -10,7 +10,7 @@ export const searchStart: ActionHandler<
   ActionCatalog,
   'SEARCH_START'
 > = (state, { payload }) => {
-  const { activeProfile, searchHistory, historyIndex } = state
+  const { activeProfile, config, searchHistory, historyIndex } = state
 
   let word: Word
   const newSearchHistory: Word[] =
@@ -45,11 +45,15 @@ export const searchStart: ActionHandler<
     !activeProfile.dicts.selected.includes('deepl')
       ? [...activeProfile.dicts.selected, 'deepl' as const]
       : activeProfile.dicts.selected
-  // DeepL is sentence-only. Gemini is its quota fallback, so both are kept
-  // out of word/short-term lookups even when an imported profile selected them.
-  const selectedDicts = selectedDictsWithDeepL.filter(
-    id => id !== 'gemini' && (useQuotaTranslators || id !== 'deepl')
-  )
+  const hasDeepLKey = Boolean(config.dictAuth.deepl.authKey.trim())
+  const hasGeminiKey = Boolean(config.dictAuth.gemini.apiKey.trim())
+  const startWithGemini = useQuotaTranslators && !hasDeepLKey && hasGeminiKey
+  // DeepL is sentence-only. Gemini takes its place immediately when DeepL is
+  // not configured, and remains its runtime fallback for invalid/quota/network
+  // failures. Both stay out of word and short-term lookups.
+  const selectedDicts = selectedDictsWithDeepL
+    .filter(id => id !== 'gemini' && (useQuotaTranslators || id !== 'deepl'))
+    .map(id => (startWithGemini && id === 'deepl' ? ('gemini' as const) : id))
 
   return {
     ...state,

@@ -13,7 +13,10 @@ import {
 import { createEpicMiddleware } from 'redux-observable'
 import { Observable } from 'rxjs'
 import { map, distinctUntilChanged, startWith } from 'rxjs/operators'
-import { message } from '@/_helpers/browser-api'
+import {
+  ignoreExpectedExtensionDisconnect,
+  message
+} from '@/_helpers/browser-api'
 import { reportPageView } from '@/_helpers/analytics'
 import { isPDFPage, isPopupPage, isStandalonePage } from '@/_helpers/saladict'
 
@@ -65,10 +68,12 @@ export const createStore = async () => {
       distinctUntilChanged()
     )
     .subscribe(isPinned => {
-      message.self.send({
-        type: 'PIN_STATE',
-        payload: isPinned
-      })
+      message.self
+        .send({
+          type: 'PIN_STATE',
+          payload: isPinned
+        })
+        .catch(ignoreExpectedExtensionDisconnect)
     })
 
   storeState$

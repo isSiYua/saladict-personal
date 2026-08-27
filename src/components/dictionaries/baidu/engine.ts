@@ -108,7 +108,9 @@ export const search: SearchFunction<
       translator.getSupportLanguages()
     )
   } catch (e) {
-    console.error('[Saladict][Baidu] translation failed', e)
+    if (process.env.DEBUG) {
+      console.warn('[Saladict][Baidu] translation failed', e)
+    }
     const credentialError =
       getAxiosCredentialError(e) || getBaiduApiCredentialError(e)
     if (translatorConfig && credentialError) {

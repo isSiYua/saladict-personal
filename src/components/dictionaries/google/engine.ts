@@ -93,19 +93,23 @@ export function parseGoogleMobileTranslation(html: string): string {
 }
 
 export function parseGoogleChromeTranslation(data: unknown): string {
-  const parts: string[] = []
+  if (!Array.isArray(data)) return ''
 
-  const collectStrings = (value: unknown) => {
-    if (typeof value === 'string') {
-      parts.push(value)
-      return
-    }
-    if (Array.isArray(value)) {
-      value.forEach(collectStrings)
-    }
-  }
+  // The Chrome endpoint has two response shapes in normal use:
+  //   ["translated text"]
+  //   [["translated text", "detected-language"]]
+  // Only the first item in a nested tuple is translation text. Recursively
+  // collecting every string leaks metadata such as "en" and "zh-CN" into
+  // the visible result.
+  const parts = data
+    .map(value => {
+      if (typeof value === 'string') return value
+      return Array.isArray(value) && typeof value[0] === 'string'
+        ? value[0]
+        : ''
+    })
+    .filter(Boolean)
 
-  collectStrings(data)
   return getUsableGoogleTranslation(parts.join(' '))
 }
 

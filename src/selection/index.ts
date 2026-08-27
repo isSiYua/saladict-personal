@@ -1,5 +1,8 @@
 import { getText, getSentence } from 'get-selection-more'
-import { message } from '@/_helpers/browser-api'
+import {
+  ignoreExpectedExtensionDisconnect,
+  message
+} from '@/_helpers/browser-api'
 import { createConfigStream } from '@/_helpers/config-manager'
 import { isInDictPanel } from '@/_helpers/saladict'
 
@@ -87,11 +90,15 @@ if (!window.__SALADICT_SELECTION_LOADED__) {
    * Escape key pressed
    */
   whenKeyPressed(isEscapeKey).subscribe(() =>
-    message.self.send({ type: 'ESCAPE_KEY' })
+    message.self
+      .send({ type: 'ESCAPE_KEY' })
+      .catch(ignoreExpectedExtensionDisconnect)
   )
 
   config$$.pipe(switchMap(createQuickSearchStream)).subscribe(() => {
-    message.self.send({ type: 'TRIPLE_CTRL' })
+    message.self
+      .send({ type: 'TRIPLE_CTRL' })
+      .catch(ignoreExpectedExtensionDisconnect)
   })
 
   config$$.pipe(switchMap(createSelectTextStream)).subscribe(async result => {

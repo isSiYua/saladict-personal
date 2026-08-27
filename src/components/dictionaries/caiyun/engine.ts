@@ -102,7 +102,9 @@ export const search: SearchFunction<
       langcodes
     )
   } catch (e) {
-    console.error('[Saladict][Caiyun] translation failed', e)
+    if (process.env.DEBUG) {
+      console.warn('[Saladict][Caiyun] translation failed', e)
+    }
     const credentialError = getAxiosCredentialError(e)
     if (userCaiYunToken && credentialError) {
       return credentialErrorResult('caiyun', credentialError, langcodes)

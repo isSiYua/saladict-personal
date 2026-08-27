@@ -1,4 +1,9 @@
-import { message, storage, openUrl } from '@/_helpers/browser-api'
+import {
+  ignoreExpectedExtensionDisconnect,
+  message,
+  storage,
+  openUrl
+} from '@/_helpers/browser-api'
 import { take } from 'rxjs/operators'
 import sinon from 'sinon'
 import { browser } from '../../helper'
@@ -13,6 +18,29 @@ describe('Browser API Wapper', () => {
     delete window.pageURL
     browser.runtime.sendMessage.callsFake(() => Promise.resolve({}))
     browser.tabs.sendMessage.callsFake(() => Promise.resolve({}))
+  })
+
+  it('ignores only stale extension-context errors', () => {
+    expect(() =>
+      ignoreExpectedExtensionDisconnect(
+        new Error('Extension context invalidated.')
+      )
+    ).not.toThrow()
+    expect(() =>
+      ignoreExpectedExtensionDisconnect({
+        message: 'message wrapper',
+        cause: new Error('Extension context invalidated.')
+      })
+    ).not.toThrow()
+    expect(() =>
+      ignoreExpectedExtensionDisconnect(new Error('Real messaging bug'))
+    ).toThrow('Real messaging bug')
+  })
+
+  it('ignores a tab that closes during background message forwarding', () => {
+    expect(() =>
+      ignoreExpectedExtensionDisconnect(new Error('No tab with id: 123.'))
+    ).not.toThrow()
   })
 
   describe('Storage', () => {
@@ -553,6 +581,20 @@ describe('Browser API Wapper', () => {
             __pageId__: 1
           })
         ).toBeTruthy()
+      })
+
+      it('ignores a tab closed during self-message forwarding', async () => {
+        message.self.initServer()
+        browser.tabs.sendMessage.callsFake(() =>
+          Promise.reject(new Error('No tab with id: 1.'))
+        )
+
+        const response = await browser.runtime.onMessage['_listeners'][0](
+          { type: '[[1]]', __pageId__: 1 },
+          { tab }
+        )
+
+        expect(response).toBeUndefined()
       })
     })
     it('message.self.send', () => {

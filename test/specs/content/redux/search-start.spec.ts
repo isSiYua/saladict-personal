@@ -62,6 +62,62 @@ describe('search start dictionaries', () => {
     expect(result.renderedDicts.map(dict => dict.id)).toContain('deepl')
   })
 
+  it('starts Gemini directly when a sentence has no DeepL key but has a Gemini key', () => {
+    const activeProfile = getDefaultProfile()
+    const config = getDefaultConfig()
+    ;(config.dictAuth.deepl as any).authKey = ''
+    ;(config.dictAuth.gemini as any).apiKey = 'gemini-free-key'
+    const state = {
+      activeProfile,
+      config,
+      searchHistory: [],
+      historyIndex: -1,
+      userFoldedDicts: {},
+      text: '',
+      isShowDictPanel: false,
+      isExpandMtaBox: false,
+      renderedDicts: []
+    } as any
+
+    const result = searchStart(state, {
+      type: 'SEARCH_START',
+      payload: {
+        word: newWord({ text: 'A complete sentence for translation.' })
+      }
+    } as any)
+
+    expect(result.renderedDicts.map(dict => dict.id)).toContain('gemini')
+    expect(result.renderedDicts.map(dict => dict.id)).not.toContain('deepl')
+  })
+
+  it('keeps DeepL primary when both translator keys are configured', () => {
+    const activeProfile = getDefaultProfile()
+    const config = getDefaultConfig()
+    ;(config.dictAuth.deepl as any).authKey = 'deepl-key:fx'
+    ;(config.dictAuth.gemini as any).apiKey = 'gemini-free-key'
+    const state = {
+      activeProfile,
+      config,
+      searchHistory: [],
+      historyIndex: -1,
+      userFoldedDicts: {},
+      text: '',
+      isShowDictPanel: false,
+      isExpandMtaBox: false,
+      renderedDicts: []
+    } as any
+
+    const result = searchStart(state, {
+      type: 'SEARCH_START',
+      payload: {
+        word: newWord({ text: 'A complete sentence for translation.' })
+      }
+    } as any)
+
+    expect(result.renderedDicts.map(dict => dict.id)).toContain('deepl')
+    expect(result.renderedDicts.map(dict => dict.id)).not.toContain('gemini')
+  })
+
   it('keeps all imported translators and does not show Gemini before fallback', () => {
     const activeProfile = getDefaultProfile()
     ;(activeProfile.dicts as any).selected = [

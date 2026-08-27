@@ -56,6 +56,22 @@ describe('google translator', () => {
     )
   })
 
+  it('does not expose detected-language metadata as translation text', () => {
+    expect(
+      parseGoogleChromeTranslation([
+        [
+          '对于大多数主题，结构将是这样的：我们将 4 小时课程的大部分时间花在传统的课堂讲座上，最后介绍本周的练习。',
+          'en'
+        ]
+      ])
+    ).not.toMatch(/\ben\s*$/)
+    expect(
+      parseGoogleChromeTranslation([
+        ['进入 generative models 与 Variational Autoencoder', 'zh-CN']
+      ])
+    ).toBe('进入 generative models 与 Variational Autoencoder')
+  })
+
   it('requests the no-key Google Chrome fallback', async () => {
     const mock = new AxiosMockAdapter(axios)
     mock.onGet(GOOGLE_CHROME_TRANSLATE_ENDPOINT).reply(200, ['你好'])

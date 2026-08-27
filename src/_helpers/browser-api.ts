@@ -399,6 +399,35 @@ function wrapMessageError<T extends MsgType>(
   return wrappedError
 }
 
+/**
+ * Reloading an unpacked extension invalidates content scripts that are already
+ * injected into open tabs, and closing a tab can race with a queued background
+ * reply. Neither lifecycle event is recoverable by retrying the old target.
+ * Treat them as a no-op only at fire-and-forget/relay call sites so they do not
+ * become unhandled rejections in Edge's extension error page.
+ */
+export function ignoreExpectedExtensionDisconnect(error: unknown): void {
+  const messages: string[] = []
+  let current: any = error
+
+  for (let depth = 0; current && depth < 4; depth += 1) {
+    if (typeof current.message === 'string') messages.push(current.message)
+    current = current.cause || current.runtimeLastError
+  }
+
+  if (
+    messages.some(message =>
+      /extension context invalidated|no tab with id|receiving end does not exist/i.test(
+        message
+      )
+    )
+  ) {
+    return
+  }
+
+  throw error
+}
+
 function validateMessageResponse<T extends MsgType>(
   method: MessageSendMethod,
   args: MessageSendArgs<T>,
@@ -498,7 +527,7 @@ function messageAddListener<T extends MsgType>(
   ...args: [T, onMessageEvent<Message<T>>] | [onMessageEvent<Message>]
 ): void {
   if (this.__self__ && window.pageId === undefined) {
-    initClient().catch(console.error)
+    initClient().catch(ignoreExpectedExtensionDisconnect)
   }
   const allListeners = this.__self__ ? messageSelfListeners : messageListeners
   const messageType = args.length === 1 ? undefined : args[0]
@@ -635,7 +664,10 @@ function initServer(): void {
         ;(message as Mutable<Message>).type = selfMsg[1] as MsgType
         const tabId = sender.tab && sender.tab.id
         if (tabId) {
-          return messageSend(tabId, message as Message)
+          return messageSend(tabId, message as Message).catch(error => {
+            ignoreExpectedExtensionDisconnect(error)
+            return undefined
+          })
         } else {
           return messageSend(message as Message)
         }

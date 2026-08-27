@@ -8,6 +8,31 @@ import { isPDFPage } from '@/_helpers/saladict'
 import { DictID } from '@/app-config'
 import { MessageResponse } from '@/typings/message'
 
+type MaybeMachineResult =
+  | {
+      credentialError?: string
+      trans?: { paragraphs?: unknown }
+    }
+  | null
+  | undefined
+
+export function shouldFallbackToGemini(
+  id: DictID,
+  result: MaybeMachineResult,
+  geminiApiKey: string
+): boolean {
+  if (id !== 'deepl' || !geminiApiKey.trim()) return false
+  if (!result || result.credentialError) return true
+
+  const paragraphs = result.trans && result.trans.paragraphs
+  return (
+    !Array.isArray(paragraphs) ||
+    !paragraphs.some(
+      paragraph => typeof paragraph === 'string' && paragraph.trim()
+    )
+  )
+}
+
 export const searchStartEpic: Epic = (action$, state$) =>
   action$.pipe(
     ofType('SEARCH_START'),
@@ -67,11 +92,7 @@ export const searchStartEpic: Epic = (action$, state$) =>
             }
             const geminiApiKey = state$.value.config.dictAuth.gemini.apiKey.trim()
 
-            if (
-              id === 'deepl' &&
-              result?.credentialError === 'quota' &&
-              geminiApiKey
-            ) {
+            if (shouldFallbackToGemini(id, result, geminiApiKey)) {
               return concat(
                 of<StoreAction>({ type: 'GEMINI_FALLBACK_START' }),
                 from(
