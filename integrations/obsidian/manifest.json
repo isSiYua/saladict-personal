@@ -1,0 +1,9 @@
+{
+  "id": "saladict-selection-translator",
+  "name": "Saladict Selection Translator",
+  "version": "0.6.0",
+  "minAppVersion": "1.5.0",
+  "description": "Select text in Obsidian and automatically open a Saladict translation popup.",
+  "author": "isSiYua",
+  "isDesktopOnly": false
+}

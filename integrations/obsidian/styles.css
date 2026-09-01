@@ -1,0 +1,595 @@
+.saladict-obsidian-panel.saladict-theme {
+  --color-brand: #2f9d8a;
+  --color-background: #fff;
+  --color-rgb-background: 255, 255, 255;
+  --color-font: #24292f;
+  --color-font-grey: #5d6670;
+  --color-divider: #d9dee3;
+  --color-surface: #f6f8fa;
+  --color-surface-active: #eaeef2;
+  --color-link: #286aa8;
+  position: fixed;
+  z-index: var(--layer-popover, 1000);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(var(--saladict-panel-width, 450px), calc(100vw - 16px));
+  min-width: min(320px, calc(100vw - 16px));
+  height: auto;
+  min-height: 150px;
+  max-width: calc(100vw - 16px);
+  max-height: min(
+    calc(100vh - 16px),
+    var(--saladict-panel-available-height, calc(100vh - 16px))
+  );
+  overflow: hidden;
+  resize: both;
+  color: var(--color-font);
+  background: var(--color-background);
+  border-radius: 6px;
+  box-shadow: rgb(0 0 0 / 55%) 0 4px 23px -6px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: var(--saladict-panel-font-size, 13px);
+  line-height: 1.6;
+  text-align: initial;
+}
+
+.theme-dark .saladict-obsidian-panel.saladict-theme {
+  --color-brand: #2b9f8d;
+  --color-background: #282c30;
+  --color-rgb-background: 40, 44, 48;
+  --color-font: #e3e0da;
+  --color-font-grey: #b8b3aa;
+  --color-divider: #555b61;
+  --color-surface: #33383d;
+  --color-surface-active: #3d444a;
+  --color-link: #8eb7e6;
+}
+
+.saladict-obsidian-panel.saladict-theme.isForcedDark {
+  --color-brand: #2b9f8d;
+  --color-background: #282c30;
+  --color-rgb-background: 40, 44, 48;
+  --color-font: #e3e0da;
+  --color-font-grey: #b8b3aa;
+  --color-divider: #555b61;
+  --color-surface: #33383d;
+  --color-surface-active: #3d444a;
+  --color-link: #8eb7e6;
+}
+
+.theme-dark .saladict-obsidian-panel.saladict-theme.isForcedLight,
+.saladict-obsidian-panel.saladict-theme.isForcedLight {
+  --color-brand: #2f9d8a;
+  --color-background: #fff;
+  --color-rgb-background: 255, 255, 255;
+  --color-font: #24292f;
+  --color-font-grey: #5d6670;
+  --color-divider: #d9dee3;
+  --color-surface: #f6f8fa;
+  --color-surface-active: #eaeef2;
+  --color-link: #286aa8;
+}
+
+.saladict-obsidian-panel[hidden] {
+  display: none !important;
+}
+
+.saladict-obsidian-panel.isDragging {
+  user-select: none;
+  box-shadow: rgb(0 0 0 / 72%) 0 8px 30px -7px;
+}
+
+.saladict-menuBar {
+  display: flex;
+  flex: 0 0 30px;
+  align-items: center;
+  position: relative;
+  height: 30px;
+  padding: 0 3px;
+  color: #fff;
+  background-color: var(--color-brand) !important;
+  background-image: none !important;
+}
+
+.saladict-menuBar-searchWrap {
+  flex: 2 1 80px;
+  min-width: 56px;
+}
+
+.saladict-menuBar-search {
+  box-sizing: border-box;
+  width: 100%;
+  height: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  color: #fff !important;
+  background: rgb(255 255 255 / 12%) !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  font: inherit;
+}
+
+.saladict-menuBar-search:focus {
+  background: rgb(255 255 255 / 19%) !important;
+  outline: 0;
+}
+
+.saladict-menuBar-dragArea {
+  flex: 3 1 34px;
+  align-self: stretch;
+  min-width: 8px;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.saladict-menuBar .saladict-menuBar-button {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  margin: 0;
+  padding: 7px;
+  color: #fff;
+  appearance: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.saladict-menuBar .saladict-menuBar-button.isDirection {
+  width: 22px;
+  min-width: 22px;
+  padding: 4px;
+}
+
+.saladict-menuBar .saladict-menuBar-button:disabled {
+  color: #9accc1;
+  background-color: transparent !important;
+  background-image: none !important;
+  cursor: default;
+}
+
+.saladict-menuBar .saladict-menuBar-button:hover,
+.saladict-menuBar .saladict-menuBar-button:focus {
+  color: #fff;
+  background-color: rgb(0 0 0 / 9%) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.saladict-menuBar .saladict-menuBar-button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.1;
+}
+
+.saladict-menuBar .saladict-menuBar-button.isActive {
+  color: #ffe56b;
+  background-color: rgb(0 0 0 / 11%) !important;
+  background-image: none !important;
+}
+
+.saladict-standaloneView {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.saladict-standaloneView .saladict-obsidian-panel.isStandalone {
+  position: absolute;
+  inset: 0 !important;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  resize: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.saladict-standaloneView .saladict-panelBody {
+  max-height: none;
+}
+
+.saladict-standaloneView .saladict-menuBar-dragArea {
+  cursor: default;
+}
+
+.saladict-standaloneWelcome {
+  padding: 28px 20px;
+  color: var(--color-font-grey);
+  text-align: center;
+}
+
+.saladict-panelBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(
+    calc(var(--saladict-panel-max-height, 80vh) - 30px),
+    calc(var(--saladict-panel-available-height, 100vh) - 30px)
+  );
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--color-background);
+  scrollbar-color: var(--color-divider) transparent;
+  scrollbar-width: thin;
+}
+
+.saladict-panelBody::-webkit-scrollbar {
+  width: 7px;
+}
+
+.saladict-panelBody::-webkit-scrollbar-thumb {
+  background: var(--color-divider);
+  border-radius: 10px;
+}
+
+.saladict-dictItem {
+  position: relative;
+  background: var(--color-background);
+}
+
+.saladict-dictItem-head {
+  display: flex;
+  box-sizing: border-box;
+  align-items: flex-start;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 20px;
+  padding-right: 2px;
+  background: var(--color-background);
+  border-top: 1px dashed var(--color-divider);
+}
+
+.saladict-dictItem:first-child .saladict-dictItem-head {
+  border-top: 0;
+}
+
+.saladict-dictItem-logoWrap {
+  position: relative;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: -1px;
+}
+
+.saladict-dictItem-mark,
+.saladict-dictItem-logo {
+  position: absolute;
+  inset: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.saladict-dictItem-mark {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+.saladict-dictItem-logo {
+  object-fit: contain;
+  user-select: none;
+}
+
+.saladict-dictItem-title {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  color: var(--color-font);
+  font-size: max(8px, calc(var(--saladict-panel-font-size, 13px) - 1px));
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.saladict-dictItem-emptyArea {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-width: 8px;
+  cursor: pointer;
+}
+
+.saladict-dictItem-headLoader {
+  display: flex;
+  flex: 0 0 54px;
+  align-items: center;
+  height: 20px;
+}
+
+.saladict-dictItem-headLoader > div,
+.saladict-dictItem-loading > div {
+  width: 7px;
+  height: 7px;
+  margin: 2px;
+  background: #f9690e;
+  border-radius: 50%;
+  animation: saladict-loader 1.5s infinite ease-in-out;
+}
+
+.saladict-dictItem-headLoader > div:nth-child(2),
+.saladict-dictItem-loading > div:nth-child(2) { animation-delay: -0.1s; }
+.saladict-dictItem-headLoader > div:nth-child(3),
+.saladict-dictItem-loading > div:nth-child(3) { animation-delay: -0.2s; }
+.saladict-dictItem-headLoader > div:nth-child(4),
+.saladict-dictItem-loading > div:nth-child(4) { animation-delay: -0.3s; }
+.saladict-dictItem-headLoader > div:nth-child(5),
+.saladict-dictItem-loading > div:nth-child(5) { animation-delay: -0.4s; }
+
+.saladict-dictItem-action,
+.saladict-dictItem-fold {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 1px 0 0;
+  padding: 3px;
+  color: var(--color-font);
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: none;
+  opacity: 0.72;
+  cursor: pointer;
+}
+
+.saladict-dictItem-action:hover,
+.saladict-dictItem-fold:hover {
+  color: var(--color-font);
+  background: var(--color-divider);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.saladict-dictItem-action svg,
+.saladict-dictItem-fold svg {
+  width: 13px;
+  height: 13px;
+}
+
+.saladict-dictItem-fold {
+  width: 19px;
+  min-width: 19px;
+}
+
+.saladict-dictItem-fold svg {
+  transform: rotate(-90deg);
+  transition: transform 0.25s;
+}
+
+.saladict-dictItem.isFolded .saladict-dictItem-fold svg {
+  transform: rotate(0deg);
+}
+
+.saladict-dictItem-body {
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  color: var(--color-font);
+  font-size: var(--saladict-panel-font-size, 13px);
+  line-height: 1.6;
+}
+
+.saladict-dictItem-bodyContent {
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 9px 10px 10px;
+}
+
+.saladict-dictItem.isPreviewFolded .saladict-dictItem-bodyContent {
+  max-height: var(--saladict-dict-preview-height, 265px);
+}
+
+.saladict-dictItem-previewFold {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 50px;
+  min-height: 0;
+  margin: 0;
+  padding: 30px 0 0;
+  color: var(--color-font);
+  background: linear-gradient(
+    rgb(var(--color-rgb-background) / 0%) 40%,
+    rgb(var(--color-rgb-background) / 50%) 60%,
+    var(--color-background) 100%
+  );
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.saladict-dictItem-previewFold[hidden] {
+  display: none;
+}
+
+.saladict-dictItem-previewFold:hover,
+.saladict-dictItem-previewFold:focus {
+  color: var(--color-font);
+  background: linear-gradient(
+    rgb(var(--color-rgb-background) / 0%) 40%,
+    rgb(var(--color-rgb-background) / 50%) 60%,
+    var(--color-background) 100%
+  );
+  box-shadow: none;
+  opacity: 1;
+}
+
+.saladict-dictItem-previewFold svg {
+  width: 15px;
+  height: 15px;
+}
+
+.saladict-dictItem.isFolded .saladict-dictItem-body {
+  display: none;
+}
+
+.saladict-dictItem-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  color: var(--color-font-grey);
+}
+
+.saladict-dictItem-loading span {
+  margin-right: 10px;
+}
+
+.saladict-wordLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 7px;
+}
+
+.saladict-headword {
+  font-size: calc(var(--saladict-panel-font-size, 13px) + 4px);
+  font-weight: 600;
+}
+
+.saladict-dictItem.isMachineTranslation .saladict-wordLine {
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.saladict-dictItem.isMachineTranslation .saladict-headword {
+  font-size: max(9px, calc(var(--saladict-panel-font-size, 13px) - 1px));
+  font-weight: 450;
+  line-height: 1.48;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.saladict-dictItem.isMachineTranslation .saladict-resultGroup ul {
+  margin-top: 4px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.saladict-dictItem.isMachineTranslation .saladict-resultGroup li {
+  padding-left: 0;
+  font-size: var(--saladict-panel-font-size, 13px);
+  line-height: 1.62;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.saladict-phonetic {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-font-grey);
+  font-family: "Lucida Sans Unicode", "Arial Unicode MS", sans-serif;
+}
+
+.saladict-inlineSpeaker {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 2px;
+  color: var(--color-brand);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.saladict-inlineSpeaker:hover {
+  color: var(--color-brand);
+  background: var(--color-surface-active);
+  box-shadow: none;
+}
+
+.saladict-inlineSpeaker svg {
+  width: 14px;
+  height: 14px;
+}
+
+.saladict-resultGroup + .saladict-resultGroup {
+  margin-top: 7px;
+}
+
+.saladict-resultGroup b {
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--color-brand);
+  font-size: max(8px, calc(var(--saladict-panel-font-size, 13px) - 1px));
+  font-style: italic;
+  font-weight: 600;
+}
+
+.saladict-resultGroup ul {
+  margin: 2px 0 0;
+  padding-left: 18px;
+}
+
+.saladict-resultGroup li {
+  margin: 1px 0;
+  padding-left: 1px;
+}
+
+.saladict-sourceError,
+.saladict-sourceEmpty,
+.saladict-topError {
+  color: var(--color-font-grey);
+}
+
+.saladict-sourceError {
+  padding: 8px 2px;
+}
+
+.saladict-topError {
+  padding: 18px;
+  color: #d97706;
+}
+
+.saladict-favorites-list {
+  display: grid;
+  gap: 8px;
+}
+
+.saladict-favorite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.saladict-favorite-body {
+  min-width: 0;
+}
+
+@keyframes saladict-loader {
+  0%, 30%, 70%, 100% { transform: scale(0); }
+  50% { transform: scale(1); }
+}

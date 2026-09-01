@@ -1,0 +1,93 @@
+{
+  "name": "saladict-selection-translator",
+  "displayName": "Saladict Selection Translator",
+  "description": "Select text with the mouse and automatically show a Saladict translation hover.",
+  "version": "0.1.0",
+  "publisher": "issiyua",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "translation",
+    "dictionary",
+    "saladict",
+    "hover"
+  ],
+  "main": "./extension.js",
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "saladict.toggleAutomaticTranslation",
+        "title": "Saladict: 开启/关闭自动划词翻译"
+      },
+      {
+        "command": "saladict.openFavorites",
+        "title": "Saladict: 打开收藏词条"
+      },
+      {
+        "command": "saladict.speak",
+        "title": "Saladict: 朗读选词",
+        "enablement": "false"
+      },
+      {
+        "command": "saladict.toggleFavorite",
+        "title": "Saladict: 收藏/取消收藏",
+        "enablement": "false"
+      }
+    ],
+    "configuration": {
+      "title": "Saladict",
+      "properties": {
+        "saladict.automaticSelectionTranslation": {
+          "type": "boolean",
+          "default": true,
+          "description": "鼠标划选文字后自动显示翻译 Hover。"
+        },
+        "saladict.targetLanguage": {
+          "type": "string",
+          "default": "zh-CN",
+          "description": "目标语言代码，例如 zh-CN、en、ja。"
+        },
+        "saladict.selectionDelay": {
+          "type": "number",
+          "default": 220,
+          "minimum": 80,
+          "maximum": 1200,
+          "description": "选区停止变化后等待多少毫秒开始查词。"
+        },
+        "saladict.maxSelectionChars": {
+          "type": "number",
+          "default": 1200,
+          "minimum": 20,
+          "maximum": 5000,
+          "description": "允许自动翻译的最大字符数。"
+        },
+        "saladict.includeEnglishDictionary": {
+          "type": "boolean",
+          "default": true,
+          "description": "英语单词同时显示音标和英英释义。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node ../../node_modules/jest/bin/jest.js --runInBand ../../test/integrations"
+  }
+}

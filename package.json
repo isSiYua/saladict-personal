@@ -14,6 +14,8 @@
     "type-check": "tsc --noEmit",
     "test": "jest --testTimeout 20000",
     "test:watch": "jest --watch",
+    "test:integrations": "jest --runInBand --testRegex 'test/integrations/.*\\.spec\\.js'",
+    "package:integrations": "node integrations/scripts/package.js",
     "zip": "node scripts/zip.js '!test' '!.git' '.env' 'deps'",
     "postinstall": "node scripts/setup-env.js",
     "commit": "git-cz",
